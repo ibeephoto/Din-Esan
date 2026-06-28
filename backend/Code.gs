@@ -1,15 +1,81 @@
+
+const SHEET_NAME = "Customers";
+
+/**
+ * Get sheet
+ */
+function getSheet() {
+  const ssId = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
+  if (!ssId) throw new Error("Missing SPREADSHEET_ID");
+
+  const ss = SpreadsheetApp.openById(ssId);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(["timestamp","name","phone","note"]);
+  }
+  return sheet;
+}
+
+/**
+ * LOG helper
+ */
+function log_(msg) {
+  try {
+    const ssId = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
+    const ss = SpreadsheetApp.openById(ssId);
+    let logSheet = ss.getSheetByName("LOG");
+
+    if (!logSheet) {
+      logSheet = ss.insertSheet("LOG");
+      logSheet.appendRow(["timestamp","raw"]);
+    }
+
+    logSheet.appendRow([new Date(), msg]);
+  } catch (e) {}
+}
+
+/**
+ * MAIN POST (V4 PRO)
+ */
 function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
+  try {
+    const raw = e.postData.contents;
+    const data = JSON.parse(raw);
 
-  switch (data.type) {
+    log_(raw);
 
-    case 'UPSERT_RECORD':
-      return ContentService.createTextOutput('ok');
+    const sheet = getSheet();
 
-    case 'DELETE_RECORD':
-      return ContentService.createTextOutput('ok');
+    if (data.type === "UPSERT_RECORD") {
+      const p = data.payload || {};
 
-    case 'LINE_MESSAGE':
-      return ContentService.createTextOutput('ok');
+      sheet.appendRow([
+        new Date(),
+        p.name || "",
+        p.phone || "",
+        p.note || ""
+      ]);
+
+      return ContentService
+        .createTextOutput(JSON.stringify({status:"ok"}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (data.type === "DELETE_RECORD") {
+      return ContentService.createTextOutput("delete ok");
+    }
+
+    if (data.type === "LINE_MESSAGE") {
+      return ContentService.createTextOutput("line ok");
+    }
+
+    return ContentService.createTextOutput("unknown type");
+
+  } catch (err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({status:"error", message: err.toString()})
+    );
   }
 }
