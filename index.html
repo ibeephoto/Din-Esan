@@ -23,6 +23,7 @@
 
 <script>
 async function submitData() {
+
   const payload = {
     apiKey: CONFIG.API_KEY,
     type: "UPSERT_RECORD",
@@ -45,6 +46,7 @@ async function submitData() {
 
   } catch (err) {
     document.getElementById('result').innerText = err;
+    console.error(err);
   }
 }
 </script>
