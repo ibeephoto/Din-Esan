@@ -1,0 +1,4 @@
+export const CONFIG = {
+  GAS_URL: "PUT_YOUR_GAS_URL_HERE",
+  VERSION: "V3_CLEAN"
+};
