@@ -1,90 +1,98 @@
-
-const SHEET_NAME = "Customers";
-
-function getSheet() {
-  const ssId = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
-  if (!ssId) throw new Error("Missing SPREADSHEET_ID");
-
-  const ss = SpreadsheetApp.openById(ssId);
-  let sheet = ss.getSheetByName(SHEET_NAME);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["timestamp","name","phone","note"]);
-  }
-  return sheet;
-}
-
-function log_(msg) {
-  try {
-    const ssId = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
-    const ss = SpreadsheetApp.openById(ssId);
-    let logSheet = ss.getSheetByName("LOG");
-
-    if (!logSheet) {
-      logSheet = ss.insertSheet("LOG");
-      logSheet.appendRow(["timestamp","raw"]);
-    }
-
-    logSheet.appendRow([new Date(), msg]);
-  } catch (e) {}
-}
-
-function doGet(e) {
-  const action = e.parameter.action;
-
-  if (action === "list") {
-    const sheet = getSheet();
-    const data = sheet.getDataRange().getValues();
-
-    const records = data.slice(1).map(r => ({
-      timestamp: r[0],
-      name: r[1],
-      phone: r[2],
-      note: r[3]
-    }));
-
-    return ContentService
-      .createTextOutput(JSON.stringify({ok:true, records}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  return ContentService.createTextOutput("OK");
-}
-
 function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
   try {
+    const requestId = Utilities.getUuid();
     const raw = e.postData.contents;
     const data = JSON.parse(raw);
 
-    log_(raw);
+    logRequest(requestId, raw);
+
+    if (!validateKey(data.apiKey)) {
+      return json({
+        status: "error",
+        code: 401,
+        message: "Unauthorized"
+      });
+    }
 
     const sheet = getSheet();
+    let result = routeRequest(sheet, data, requestId);
 
-    if (data.type === "UPSERT_RECORD") {
-      const p = data.payload || {};
-
-      sheet.appendRow([
-        new Date(),
-        p.name || "",
-        p.phone || "",
-        p.note || ""
-      ]);
-
-      return ContentService.createTextOutput(JSON.stringify({status:"ok"}));
-    }
-
-    if (data.type === "DELETE_RECORD") {
-      return ContentService.createTextOutput("delete ok");
-    }
-
-    if (data.type === "LINE_MESSAGE") {
-      return ContentService.createTextOutput("line ok");
-    }
-
-    return ContentService.createTextOutput("unknown type");
+    return json(result);
 
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({status:"error", message: err.toString()}));
+    logError(err);
+
+    return json({
+      status: "error",
+      message: err.toString()
+    });
+
+  } finally {
+    lock.releaseLock();
   }
+}
+
+function routeRequest(sheet, data, requestId) {
+  switch (data.type) {
+    case "UPSERT_RECORD":
+      return upsert(sheet, data.payload, requestId);
+    case "DELETE_RECORD":
+      return remove(sheet, data.payload);
+    case "GET_ALL":
+      return getAll(sheet);
+    default:
+      return { status: "error", message: "Unknown type" };
+  }
+}
+
+function upsert(sheet, p, requestId) {
+  const id = Utilities.getUuid();
+  sheet.appendRow([
+    id,
+    new Date(),
+    p.name || "",
+    p.phone || "",
+    p.note || "",
+    requestId
+  ]);
+  return { status: "success", id: id };
+}
+
+function getAll(sheet) {
+  return {
+    status: "success",
+    data: sheet.getDataRange().getValues()
+  };
+}
+
+function remove(sheet, payload) {
+  return { status: "success", message: "delete not implemented" };
+}
+
+function getSheet() {
+  const id = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
+  return SpreadsheetApp.openById(id).getSheetByName("Sheet1");
+}
+
+function validateKey(key) {
+  const valid = PropertiesService.getScriptProperties().getProperty("API_KEY");
+  return key === valid;
+}
+
+function logRequest(id, raw) {
+  const sheet = getSheet();
+  sheet.appendRow([new Date(), "REQ", id, raw]);
+}
+
+function logError(err) {
+  const sheet = getSheet();
+  sheet.appendRow([new Date(), "ERR", err.toString()]);
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
