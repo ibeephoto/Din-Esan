@@ -20,11 +20,6 @@
     </a>
     <div class="header-actions">
       <span id="syncStatus"></span>
-      <!-- ปุ่มไปหน้าแอดมิน (เห็นเสมอ) -->
-      <a href="admin.html" class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:5px;">
-        📋 <span class="nav-label">หน้าแอดมิน</span>
-      </a>
-      <button class="btn btn-outline" id="btnAdminLogin">🔒 แอดมิน</button>
     </div>
   </div>
 </header>
@@ -33,7 +28,7 @@
 <div class="page-nav-banner">
   <div class="page-nav-inner">
     <span class="page-nav-current">🏠 หน้าหลัก (สินค้าฝากขาย)</span>
-    <a href="admin.html" class="page-nav-link">
+    <a href="#" onclick="event.preventDefault();requireAdminAccess();" class="page-nav-link">
       📋 ไปหน้าแอดมิน (จัดการลูกค้า) →
     </a>
   </div>
@@ -65,7 +60,7 @@
     <span id="resultCount" style="color:#6b7280;font-size:14px;"></span>
     <div id="adminBar" style="display:none;gap:10px;align-items:center;">
       <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ เพิ่มรายการ</button>
-      <a href="admin.html" class="btn btn-primary btn-sm" style="background:#2563eb;">
+      <a href="#" onclick="event.preventDefault();requireAdminAccess();" class="btn btn-primary btn-sm" style="background:#2563eb;">
         📋 จัดการลูกค้า
       </a>
       <button class="btn btn-ghost btn-sm" onclick="logout()">🚪 ออกจากระบบ</button>
@@ -86,6 +81,7 @@
   <p>© 2567 ระบบฝากขายอสังหาริมทรัพย์ •
     <a href="https://facebook.com" target="_blank">Facebook</a>
   </p>
+  <p class="footer-credit">📸 iBeePhoto ผู้จัดทำ &nbsp;|&nbsp; โทร. 064-5298287 &nbsp;|&nbsp; Line: daboybee77</p>
 </footer>
 
 <!-- ─── Login Modal ─── -->
@@ -107,7 +103,7 @@
       <p id="loginErr" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;">รหัสผ่านไม่ถูกต้อง</p>
       <div class="modal-footer">
         <button class="btn btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
-        <button class="btn btn-ghost"   onclick="closeModal('loginModal')">ยกเลิก</button>
+        <button class="btn btn-ghost"   onclick="pendingAdminNav=false;closeModal('loginModal')">ยกเลิก</button>
       </div>
       <p style="text-align:center;font-size:12px;color:#bbb;margin-top:12px;">
         รหัสผ่านอยู่ใน js/firebase-config.js
@@ -189,6 +185,7 @@ let isAdmin      = sessionStorage.getItem("isAdmin") === "1";
 let activeFilter = "ทั้งหมด";
 let allListings  = [];
 let unsubListings = null;
+let pendingAdminNav = false; // true while waiting for password to navigate to admin.html
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
@@ -203,14 +200,14 @@ window.addEventListener("DOMContentLoaded", () => {
     renderListings();
   });
 
-  document.getElementById("btnAdminLogin").onclick = () => {
-    if (isAdmin) logout(); else openModal("loginModal");
-  };
   // Close modal on backdrop click
   document.addEventListener("click", e => {
     ["loginModal","listingModal"].forEach(id => {
       const el = document.getElementById(id);
-      if (el && e.target === el) closeModal(id);
+      if (el && e.target === el) {
+        if (id === "loginModal") pendingAdminNav = false;
+        closeModal(id);
+      }
     });
   });
 });
@@ -285,14 +282,28 @@ function setFilter(btn) {
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+// เรียกจากปุ่ม/ลิ้งค์ที่จะไปหน้าแอดมิน — ต้องใส่รหัสผ่านก่อนทุกครั้ง ไม่ว่าจะเคยล็อกอินมาก่อนหรือไม่
+function requireAdminAccess() {
+  pendingAdminNav = true;
+  document.getElementById("loginPw").value = "";
+  document.getElementById("loginErr").style.display = "none";
+  openModal("loginModal");
+}
 function doLogin() {
   const pw = document.getElementById("loginPw").value;
   if (pw === ADMIN_PASSWORD) {
-    isAdmin = true;
-    sessionStorage.setItem("isAdmin", "1");
-    closeModal("loginModal");
     document.getElementById("loginPw").value = "";
     document.getElementById("loginErr").style.display = "none";
+    closeModal("loginModal");
+    if (pendingAdminNav) {
+      pendingAdminNav = false;
+      // โทเค็นใช้ครั้งเดียว ส่งต่อไปให้ admin.html ตรวจสอบ จะไม่ค้างไว้ในเซสชัน
+      sessionStorage.setItem("adminGateToken", "1");
+      window.location.href = "admin.html";
+      return;
+    }
+    isAdmin = true;
+    sessionStorage.setItem("isAdmin", "1");
     updateAdminUI();
     renderListings();
     showToast("✅ เข้าสู่ระบบสำเร็จ");
@@ -307,17 +318,8 @@ function logout() {
   renderListings();
 }
 function updateAdminUI() {
-  const btn = document.getElementById("btnAdminLogin");
   const bar = document.getElementById("adminBar");
-  if (isAdmin) {
-    btn.textContent = "🚪 ออกจากระบบ";
-    btn.onclick = logout;
-    bar.style.display = "flex";
-  } else {
-    btn.textContent = "🔒 แอดมิน";
-    btn.onclick = () => openModal("loginModal");
-    bar.style.display = "none";
-  }
+  bar.style.display = isAdmin ? "flex" : "none";
 }
 
 // ─── CRUD Listings ───────────────────────────────────────────────────────────

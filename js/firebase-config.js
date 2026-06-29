@@ -1,30 +1,18 @@
-// ════════════════════════════════════════════════════════════════════════════
-//  firebase-config.js  —  กำหนดค่า Firebase (แก้ไขตรงนี้หลังสร้าง project)
-// ════════════════════════════════════════════════════════════════════════════
-//
-//  วิธีตั้งค่า Firebase (ทำครั้งเดียว ~5 นาที):
-//  1. ไป https://console.firebase.google.com
-//  2. กด "Add project" → ตั้งชื่อ เช่น "property-site" → Create
-//  3. เมนูซ้าย: Build → Firestore Database → Create database
-//     เลือก "Start in test mode" → Next → Enable
-//  4. Project settings (⚙ มุมซ้ายบน) → General → Your apps
-//     กด </> (Web) → ตั้งชื่อ App → Register app
-//  5. คัดลอก firebaseConfig แล้วแปะแทนค่าด้านล่างนี้
-//
-// ─────────────────────────────────────────────────────────────────────────────
+// js/firebase-config.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyD5nAGiHNb98sCHMteLu-7RIYS6aZt0YzI",
+  authDomain: "property-site-9dfc0.firebaseapp.com",
+  projectId: "property-site-9dfc0",
+  storageBucket: "property-site-9dfc0.firebasestorage.app",
+  messagingSenderId: "1019585501643",
+  appId: "1:1019585501643:web:12efacbd43b577a2457e4e",
+  measurementId: "G-B5P80KD0T0"
 };
 
-// ─── Admin password (เปลี่ยนได้เลย) ──────────────────────────────────────────
-const ADMIN_PASSWORD = "admin1234";
-
-// ─── Collections ──────────────────────────────────────────────────────────────
-const COL_LISTINGS = "listings";
-const COL_CLIENTS  = "clients";
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);

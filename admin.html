@@ -1,601 +1,317 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ระบบบันทึกลูกค้าฝากขาย</title>
-  <link rel="stylesheet" href="css/style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — Property Site</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+
+    /* ===== LOGIN ===== */
+    #login-section {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .login-box {
+      background: #fff; padding: 2.5rem; border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1); width: 100%; max-width: 380px;
+    }
+    .login-box h1 { font-size: 1.4rem; margin-bottom: 1.5rem; text-align: center; color: #1a73e8; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .85rem; margin-bottom: .4rem; color: #555; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: .65rem .9rem; border: 1px solid #ddd;
+      border-radius: 8px; font-size: .95rem; transition: border .2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #1a73e8;
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .btn {
+      width: 100%; padding: .75rem; border: none; border-radius: 8px;
+      font-size: 1rem; cursor: pointer; transition: background .2s;
+    }
+    .btn-primary { background: #1a73e8; color: #fff; }
+    .btn-primary:hover { background: #1558b0; }
+    .btn-danger { background: #e53935; color: #fff; margin-top: .5rem; }
+    .btn-danger:hover { background: #b71c1c; }
+    .error-msg { color: #e53935; font-size: .85rem; margin-top: .75rem; text-align: center; }
+
+    /* ===== ADMIN PANEL ===== */
+    #admin-section { display: none; }
+    .admin-header {
+      background: #1a73e8; color: #fff; padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .admin-header h1 { font-size: 1.2rem; }
+    .admin-header button {
+      background: rgba(255,255,255,.2); color: #fff; border: none;
+      padding: .5rem 1rem; border-radius: 6px; cursor: pointer; font-size: .9rem;
+    }
+    .admin-header button:hover { background: rgba(255,255,255,.35); }
+
+    .admin-body { max-width: 750px; margin: 2rem auto; padding: 0 1rem; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.1rem; margin-bottom: 1.5rem; color: #333; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media(max-width:500px) { .form-row { grid-template-columns: 1fr; } }
+
+    .success-msg { color: #2e7d32; font-size: .9rem; margin-top: .75rem; text-align: center; }
+
+    /* Listings table */
+    .listings-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .listings-table th { background: #f5f5f5; padding: .6rem .8rem; text-align: left; }
+    .listings-table td { padding: .6rem .8rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    .listings-table tr:hover td { background: #fafafa; }
+    .btn-sm {
+      padding: .3rem .7rem; border: none; border-radius: 5px;
+      font-size: .8rem; cursor: pointer; margin-right: .3rem;
+    }
+    .btn-edit { background: #fff3e0; color: #e65100; }
+    .btn-del  { background: #fce4ec; color: #c62828; }
+    .tag-sale { background: #e8f5e9; color: #2e7d32; padding: .15rem .5rem; border-radius: 4px; }
+    .tag-rent { background: #e3f2fd; color: #1565c0; padding: .15rem .5rem; border-radius: 4px; }
+  </style>
 </head>
 <body>
 
-<!-- ─── Header ─── -->
-<header class="admin-header">
-  <div class="inner">
-    <div class="admin-logo">
-      <img src="img/logo.png" alt="ดินอีสาน" class="logo-img logo-img-admin"/>
-      <div>
-        <strong>ดินอีสาน — ระบบบันทึกลูกค้า</strong>
-        <small>บ้าน • ที่ดิน • อสังหาริมทรัพย์</small>
-      </div>
+<!-- ===== LOGIN ===== -->
+<section id="login-section">
+  <div class="login-box">
+    <h1>🔐 Admin Login</h1>
+    <div class="form-group">
+      <label>อีเมล</label>
+      <input type="email" id="login-email" placeholder="admin@example.com">
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span id="syncStatus"></span>
-      <!-- ปุ่มกลับหน้าหลัก (เห็นเสมอ) -->
-      <a href="index.html" class="btn btn-sm"
-        style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;gap:5px;">
-        🏠 <span class="nav-label">หน้าหลัก</span>
-      </a>
+    <div class="form-group">
+      <label>รหัสผ่าน</label>
+      <input type="password" id="login-password" placeholder="••••••••">
     </div>
+    <button class="btn btn-primary" id="login-btn">เข้าสู่ระบบ</button>
+    <p class="error-msg" id="login-error"></p>
   </div>
-</header>
+</section>
 
-<!-- ─── Page Nav Banner ─── -->
-<div class="page-nav-banner" style="background:#1a6b3c;">
-  <div class="page-nav-inner">
-    <a href="index.html" class="page-nav-link" style="color:rgba(255,255,255,.75);">
-      ← 🏠 หน้าหลัก (สินค้าฝากขาย)
-    </a>
-    <span class="page-nav-current" style="color:#fff;">📋 หน้าแอดมิน (จัดการลูกค้า)</span>
-  </div>
-</div>
+<!-- ===== ADMIN PANEL ===== -->
+<section id="admin-section">
+  <header class="admin-header">
+    <h1>🏠 Admin Panel — Property Site</h1>
+    <button id="logout-btn">ออกจากระบบ</button>
+  </header>
 
-<!-- ─── Views ─── -->
-<div id="viewList"></div>
-<div id="viewForm" style="display:none;"></div>
+  <div class="admin-body">
 
-<!-- ─── Appointment Modal ─── -->
-<div class="modal-backdrop" id="aptModal" style="display:none;">
-  <div class="modal modal-lg">
-    <div class="modal-head">
-      <div class="modal-icon">📅</div>
-      <div><h2 style="font-size:18px;font-weight:800;">ปฏิทินนัดหมายดูพื้นที่</h2></div>
-    </div>
-    <div class="modal-body">
-      <div class="field-row" style="margin-bottom:14px;align-items:flex-end;">
-        <div class="field field-third">
-          <label>วันที่</label>
-          <input type="date" id="aptDate"/>
+    <!-- ฟอร์มโพสต์ประกาศ -->
+    <div class="card">
+      <h2 id="form-title">➕ เพิ่มประกาศใหม่</h2>
+      <input type="hidden" id="edit-id">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>ชื่อประกาศ *</label>
+          <input type="text" id="f-title" placeholder="เช่น ขายบ้าน 2 ชั้น ย่านลาดพร้าว">
         </div>
-        <div class="field field-quarter">
-          <label>เวลา</label>
-          <input type="time" id="aptTime"/>
-        </div>
-        <div class="field" style="flex:2 1 180px;">
-          <label>หมายเหตุ</label>
-          <input type="text" id="aptNote" placeholder="รายละเอียดนัด"/>
-        </div>
-        <div class="field" style="flex:0;">
-          <button class="btn btn-primary" onclick="addAppointment()">＋ เพิ่ม</button>
+        <div class="form-group">
+          <label>ประเภท *</label>
+          <select id="f-type">
+            <option value="sale">ขาย</option>
+            <option value="rent">เช่า</option>
+          </select>
         </div>
       </div>
-      <div id="aptList"></div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="saveAppointments()">💾 บันทึก</button>
-        <button class="btn btn-ghost"   onclick="closeModal('aptModal')">ปิด</button>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>ราคา (บาท) *</label>
+          <input type="number" id="f-price" placeholder="3500000">
+        </div>
+        <div class="form-group">
+          <label>ที่ตั้ง</label>
+          <input type="text" id="f-location" placeholder="เช่น ลาดพร้าว กรุงเทพฯ">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>URL รูปภาพ (ถ้ามี)</label>
+        <input type="url" id="f-image" placeholder="https://...">
+      </div>
+
+      <div class="form-group">
+        <label>รายละเอียด</label>
+        <textarea id="f-desc" placeholder="บรรยายรายละเอียดอสังหาริมทรัพย์..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="submit-btn">บันทึกประกาศ</button>
+      <button class="btn btn-danger" id="cancel-edit-btn" style="display:none">ยกเลิกการแก้ไข</button>
+      <p id="form-msg" style="margin-top:.75rem; text-align:center; font-size:.9rem;"></p>
+    </div>
+
+    <!-- รายการประกาศทั้งหมด -->
+    <div class="card">
+      <h2>📋 ประกาศทั้งหมด</h2>
+      <div id="listings-container">
+        <p style="color:#999">กำลังโหลด...</p>
       </div>
     </div>
+
   </div>
-</div>
+</section>
 
-<!-- ─── Firebase SDK ─── -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script type="module">
+  import { login, logout, watchAuthState } from "./js/auth.js";
+  import { addListing, updateListing, deleteListing } from "./js/admin.js";
+  import { getAllListings } from "./js/listings.js";
 
-<!-- ─── App scripts ─── -->
-<script src="js/firebase-config.js"></script>
-<script src="js/common.js"></script>
-<script src="js/db.js"></script>
-<script>
-// ════════════════════════════════════════════════════════════════════════════
-//  ADMIN — Client Management
-// ════════════════════════════════════════════════════════════════════════════
-
-let allClients       = [];
-let editingClient    = null;
-let tempAppointments = [];
-let unsubClients     = null;
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-window.addEventListener("DOMContentLoaded", () => {
-  unsubClients = Storage.onClients(clients => {
-    allClients = clients;
-    setSyncStatus("synced");
-    if (document.getElementById("viewList").style.display !== "none") renderList();
+  // ===== Auth state =====
+  watchAuthState(user => {
+    if (user) {
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("admin-section").style.display = "block";
+      loadListings();
+    } else {
+      document.getElementById("login-section").style.display = "flex";
+      document.getElementById("admin-section").style.display = "none";
+    }
   });
-  showList();
-  document.addEventListener("click", e => {
-    if (e.target.id === "aptModal") closeModal("aptModal");
+
+  // ===== Login =====
+  document.getElementById("login-btn").addEventListener("click", async () => {
+    const email    = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    const errorEl  = document.getElementById("login-error");
+
+    if (!email || !password) { errorEl.textContent = "กรุณากรอกอีเมลและรหัสผ่าน"; return; }
+
+    const result = await login(email, password);
+    if (!result.success) errorEl.textContent = result.message;
   });
-});
-window.addEventListener("beforeunload", () => { if (unsubClients) unsubClients(); });
 
-// ════════════════════════════════════════════════════════════════════════════
-// LIST VIEW
-// ════════════════════════════════════════════════════════════════════════════
-function showList() {
-  editingClient = null;
-  document.getElementById("viewForm").style.display = "none";
-  document.getElementById("viewList").style.display = "block";
-  renderList();
-}
+  // ===== Logout =====
+  document.getElementById("logout-btn").addEventListener("click", () => logout());
 
-function renderList() {
-  const q = ((document.getElementById("searchQ")||{}).value || "").toLowerCase();
-  const filtered = allClients.filter(c =>
-    !q
-    || `${c.firstName} ${c.lastName}`.toLowerCase().includes(q)
-    || (c.phone||"").includes(q)
-    || (c.deeds||[]).some(d =>
-        (d.province||"").toLowerCase().includes(q) ||
-        (d.district||"").toLowerCase().includes(q))
-  );
+  // ===== Submit ประกาศ =====
+  document.getElementById("submit-btn").addEventListener("click", async () => {
+    const id    = document.getElementById("edit-id").value;
+    const title = document.getElementById("f-title").value.trim();
+    const type  = document.getElementById("f-type").value;
+    const price = document.getElementById("f-price").value;
+    const msgEl = document.getElementById("form-msg");
 
-  const totalDeeds = allClients.reduce((s,c)=>s+(c.deeds||[]).length, 0);
-  const withApt    = allClients.filter(c=>(c.appointments||[]).length>0).length;
-  const savedQ     = q;
+    if (!title || !price) {
+      msgEl.style.color = "#e53935";
+      msgEl.textContent = "กรุณากรอกชื่อประกาศและราคา";
+      return;
+    }
 
-  document.getElementById("viewList").innerHTML = `
-    <div class="main-admin">
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-card"><div class="num" style="color:#1a6b3c">${allClients.length}</div><div class="lbl">ลูกค้าทั้งหมด</div></div>
-        <div class="stat-card"><div class="num" style="color:#2563eb">${totalDeeds}</div><div class="lbl">โฉนดทั้งหมด</div></div>
-        <div class="stat-card"><div class="num" style="color:#d97706">${withApt}</div><div class="lbl">มีนัดหมาย</div></div>
-      </div>
-
-      <!-- Toolbar -->
-      <div class="toolbar">
-        <input type="text" id="searchQ" value="${escHtml(savedQ)}"
-          placeholder="🔍 ค้นหาชื่อ, เบอร์, จังหวัด..." oninput="renderList()"/>
-        <div class="toolbar-actions">
-          <a href="index.html" class="btn btn-ghost btn-sm">🏠 ดูหน้าหลัก</a>
-          <button class="btn btn-ghost btn-sm" onclick="exportJSON()">📤 ส่งออก JSON</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()">📥 นำเข้า JSON</button>
-          <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 ปริ้นท์</button>
-          <button class="btn btn-primary btn-sm" onclick="showForm(null)">＋ เพิ่มลูกค้า</button>
-        </div>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)"/>
-      </div>
-
-      <!-- Table -->
-      ${filtered.length === 0 ? `
-        <div class="empty-state">
-          <div class="empty-icon">${allClients.length===0?'📋':'🔍'}</div>
-          <p>${allClients.length===0?'ยังไม่มีข้อมูลลูกค้า — กด "เพิ่มลูกค้า"':'ไม่พบข้อมูลที่ค้นหา'}</p>
-        </div>
-      ` : `
-        <div class="data-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th><th>ชื่อ-นามสกุล</th><th>เบอร์โทร</th><th>ไลน์/FB</th>
-                <th>โฉนด / พื้นที่</th><th>เนื้อที่</th><th>ราคา</th>
-                <th>ค่านายหน้า 3%</th><th>นัดหมาย</th><th>จัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filtered.map((c,i) => {
-                const d    = (c.deeds||[])[0] || {};
-                const comm = calcCommission(d.price||"");
-                return `<tr>
-                  <td style="color:#9ca3af">${i+1}</td>
-                  <td>
-                    <div class="td-name">${escHtml(c.firstName||'')} ${escHtml(c.lastName||'')}</div>
-                    <div class="td-sub">${c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString('th-TH') : ''}</div>
-                  </td>
-                  <td>${escHtml(c.phone||'—')}</td>
-                  <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    ${escHtml(c.social||'—')}
-                  </td>
-                  <td>
-                    <div class="td-name">${escHtml(d.no||'—')}</div>
-                    <div class="td-sub">${[d.district,d.province].filter(Boolean).map(escHtml).join(', ')}</div>
-                    ${(c.deeds||[]).length>1?`<span class="pill pill-blue">+${c.deeds.length-1} แปลง</span>`:''}
-                  </td>
-                  <td style="white-space:nowrap">${formatArea(d)}</td>
-                  <td style="font-weight:700;color:#1a6b3c;white-space:nowrap">${d.price?'฿'+escHtml(d.price):'—'}</td>
-                  <td style="font-size:12px;white-space:nowrap">${comm
-                    ?`หัก ฿${comm.c}<br><strong>คงเหลือ ฿${comm.n}</strong>`:'—'}</td>
-                  <td>${(c.appointments||[]).length>0
-                    ?`<span class="pill pill-green">${c.appointments.length} นัด</span>`
-                    :'<span style="color:#9ca3af">—</span>'}</td>
-                  <td>
-                    <div style="display:flex;gap:6px;">
-                      <button class="btn btn-outline btn-sm" onclick="showForm('${c.id}')">✏ แก้ไข</button>
-                      <button class="btn btn-danger btn-sm"  onclick="deleteClient('${c.id}')">🗑</button>
-                    </div>
-                  </td>
-                </tr>`;
-              }).join("")}
-            </tbody>
-          </table>
-        </div>
-      `}
-    </div>
-  `;
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// FORM VIEW
-// ════════════════════════════════════════════════════════════════════════════
-function showForm(id) {
-  document.getElementById("viewList").style.display = "none";
-  if (id) {
-    editingClient = JSON.parse(JSON.stringify(allClients.find(c=>c.id===id)));
-  } else {
-    editingClient = {
-      id: uid(), firstName:"", lastName:"", phone:"", social:"",
-      deeds:[emptyDeed()], appointments:[], notes:"", extraMarketing:false,
-      createdAt: new Date().toISOString()
+    const data = {
+      title,
+      type,
+      price:       Number(price),
+      location:    document.getElementById("f-location").value.trim(),
+      description: document.getElementById("f-desc").value.trim(),
+      imageUrl:    document.getElementById("f-image").value.trim(),
     };
-  }
-  document.getElementById("viewForm").style.display = "block";
-  renderForm();
-}
 
-function emptyDeed() {
-  return { id:uid(), no:"", district:"", province:"",
-           rai:"", ngan:"", sqwa:"", coords:"", price:"",
-           frontImages:[], backImages:[] };
-}
+    msgEl.style.color = "#666";
+    msgEl.textContent = "กำลังบันทึก...";
 
-function renderForm() {
-  const c = editingClient;
-  document.getElementById("viewForm").innerHTML = `
-    <div class="main-admin">
-      <div class="breadcrumb">
-        <a href="index.html">🏠 หน้าหลัก</a><span>›</span>
-        <a href="#" onclick="showList();return false;">รายชื่อลูกค้า</a><span>›</span>
-        <span>${escHtml(c.firstName ? c.firstName+' '+c.lastName : 'เพิ่มลูกค้าใหม่')}</span>
-      </div>
-      <h2 style="font-size:20px;font-weight:800;margin-bottom:20px;">
-        ${c.firstName ? '✏ แก้ไขข้อมูลลูกค้า' : '➕ เพิ่มลูกค้าใหม่'}
-      </h2>
+    const result = id ? await updateListing(id, data) : await addListing(data);
 
-      <!-- Personal -->
-      <div class="form-card">
-        <div class="card-head"><h3>👤 ข้อมูลส่วนตัว</h3></div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field field-half">
-              <label>ชื่อ<span class="req">*</span></label>
-              <input type="text" id="fFirstName" value="${escHtml(c.firstName)}" placeholder="ชื่อจริง"
-                oninput="editingClient.firstName=this.value"/>
-            </div>
-            <div class="field field-half">
-              <label>นามสกุล<span class="req">*</span></label>
-              <input type="text" id="fLastName" value="${escHtml(c.lastName)}" placeholder="นามสกุล"
-                oninput="editingClient.lastName=this.value"/>
-            </div>
-            <div class="field field-half">
-              <label>เบอร์โทรศัพท์<span class="req">*</span></label>
-              <input type="tel" id="fPhone" value="${escHtml(c.phone)}" placeholder="0xx-xxx-xxxx"
-                oninput="editingClient.phone=this.value"/>
-            </div>
-            <div class="field field-half">
-              <label>ไลน์ / เฟสบุ๊ค</label>
-              <input type="text" id="fSocial" value="${escHtml(c.social||'')}" placeholder="@line หรือ Facebook"
-                oninput="editingClient.social=this.value"/>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Deeds -->
-      <div class="form-card">
-        <div class="card-head">
-          <h3>📄 ข้อมูลโฉนด / ที่ดิน
-            <span class="pill pill-green">${c.deeds.length} แปลง</span>
-          </h3>
-          <button class="btn btn-primary btn-sm" onclick="addDeed()">＋ เพิ่มโฉนด</button>
-        </div>
-        <div class="card-body" id="deedsContainer">
-          ${c.deeds.map((d,i) => renderDeedHTML(d,i)).join("")}
-        </div>
-      </div>
-
-      <!-- Marketing -->
-      <div class="form-card">
-        <div class="card-head"><h3>💰 ค่าบริการและการตลาด</h3></div>
-        <div class="card-body">
-          <div class="warn-box">
-            <div class="wb-title">📋 ค่านายหน้าการตลาด 3%</div>
-            <div class="wb-text">
-              หักค่านายหน้า 3% จากราคาขาย<br>
-              ชำระวันที่เซ็นต์สัญญาแต่งตั้งนายหน้า
-            </div>
-          </div>
-          <div class="check-row">
-            <input type="checkbox" id="fExtraMkt" ${c.extraMarketing?"checked":""}
-              onchange="editingClient.extraMarketing=this.checked"/>
-            <label for="fExtraMkt">ต้องการทำการตลาดเพิ่มเติม (มีค่าใช้จ่ายเพิ่ม)</label>
-          </div>
-          <div class="field field-full">
-            <label>หมายเหตุ</label>
-            <textarea rows="3" placeholder="บันทึกเพิ่มเติม..."
-              oninput="editingClient.notes=this.value">${escHtml(c.notes||'')}</textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Appointments -->
-      <div class="form-card">
-        <div class="card-head">
-          <h3>📅 ปฏิทินนัดหมายดูพื้นที่
-            ${(c.appointments||[]).length>0
-              ?`<span class="pill pill-green">${c.appointments.length} นัด</span>`:''}
-          </h3>
-          <button class="btn btn-outline btn-sm" onclick="openAptModal()">จัดการนัด</button>
-        </div>
-        <div class="card-body">
-          ${(c.appointments||[]).length===0
-            ?'<p style="color:#9ca3af;font-size:14px;text-align:center;">ยังไม่มีนัดหมาย</p>'
-            :(c.appointments||[]).map(a=>`
-              <div style="padding:8px 12px;border-radius:8px;background:#f0fdf4;
-                border:1px solid #bbf7d0;margin-bottom:6px;font-size:13px;color:#166534;">
-                📅 ${escHtml(a.date)}${a.time?' เวลา '+escHtml(a.time)+' น.':''}${a.note?' — '+escHtml(a.note):''}
-              </div>`).join("")}
-        </div>
-      </div>
-
-      <!-- Save -->
-      <div style="display:flex;gap:10px;justify-content:flex-end;padding-bottom:40px;">
-        <button class="btn btn-ghost" onclick="showList()">ยกเลิก</button>
-        <button class="btn btn-primary" id="btnSaveClient" onclick="saveClient()"
-          style="padding:12px 28px;font-size:15px;">💾 บันทึกข้อมูล</button>
-      </div>
-    </div>
-  `;
-}
-
-// ─── Deed HTML ────────────────────────────────────────────────────────────────
-function renderDeedHTML(d, i) {
-  const comm = calcCommission(d.price||"");
-  return `
-    <div class="deed-box" id="deed-${d.id}">
-      <div class="deed-box-head">
-        <span class="pill pill-green">โฉนดที่ ${i+1}</span>
-        ${i>0?`<button class="btn btn-danger btn-sm" onclick="removeDeed('${d.id}')">ลบโฉนดนี้</button>`:''}
-      </div>
-      <div class="field-row">
-        <div class="field field-third">
-          <label>หมายเลขโฉนด</label>
-          <input type="text" value="${escHtml(d.no||'')}" placeholder="12345"
-            oninput="updateDeed('${d.id}','no',this.value)"/>
-        </div>
-        <div class="field field-third">
-          <label>อำเภอ</label>
-          <input type="text" value="${escHtml(d.district||'')}" placeholder="อ.เมือง"
-            oninput="updateDeed('${d.id}','district',this.value)"/>
-        </div>
-        <div class="field field-third">
-          <label>จังหวัด</label>
-          <input type="text" value="${escHtml(d.province||'')}" placeholder="เชียงใหม่"
-            oninput="updateDeed('${d.id}','province',this.value)"/>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field field-quarter"><label>ไร่</label>
-          <input type="number" min="0" value="${escHtml(d.rai||'')}"
-            oninput="updateDeed('${d.id}','rai',this.value)"/></div>
-        <div class="field field-quarter"><label>งาน</label>
-          <input type="number" min="0" value="${escHtml(d.ngan||'')}"
-            oninput="updateDeed('${d.id}','ngan',this.value)"/></div>
-        <div class="field field-quarter"><label>ตร.ว.</label>
-          <input type="number" min="0" value="${escHtml(d.sqwa||'')}"
-            oninput="updateDeed('${d.id}','sqwa',this.value)"/></div>
-        <div class="field" style="flex:2 1 160px;"><label>พิกัด GPS</label>
-          <input type="text" value="${escHtml(d.coords||'')}" placeholder="lat,lng"
-            oninput="updateDeed('${d.id}','coords',this.value)"/></div>
-      </div>
-      <div class="field-row">
-        <div class="field" style="flex:1 1 180px;"><label>ราคา (บาท)</label>
-          <input type="text" value="${escHtml(d.price||'')}" placeholder="2,500,000"
-            oninput="updateDeed('${d.id}','price',this.value);refreshCommission('${d.id}')"/></div>
-        <div id="comm-${d.id}" style="flex:2 1 260px;display:flex;align-items:center;">
-          ${comm ? commHTML(d.id, comm) : ''}
-        </div>
-      </div>
-      <!-- Images -->
-      <div style="margin-top:14px;">
-        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">📷 รูปโฉนดหน้า</div>
-        <div class="img-upload-row" id="front-${d.id}">
-          ${(d.frontImages||[]).map((src,ii)=>thumbHTML(d.id,'front',src,ii)).join("")}
-          ${addBtnHTML(d.id,'front')}
-        </div>
-        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-top:10px;margin-bottom:6px;">📷 รูปโฉนดหลัง</div>
-        <div class="img-upload-row" id="back-${d.id}">
-          ${(d.backImages||[]).map((src,ii)=>thumbHTML(d.id,'back',src,ii)).join("")}
-          ${addBtnHTML(d.id,'back')}
-        </div>
-      </div>
-    </div>`;
-}
-
-function commHTML(deedId, comm) {
-  return `<div class="commission-box" id="comm-${deedId}" style="flex:2 1 260px;">
-    <div class="cm-title">💰 คำนวณค่านายหน้า 3%</div>
-    <div class="cm-vals">หัก ฿${comm.c} • <strong style="color:#1a6b3c">คงเหลือ ฿${comm.n}</strong></div>
-    <div class="cm-note">ชำระวันเซ็นต์สัญญาแต่งตั้งนายหน้า</div>
-  </div>`;
-}
-
-function thumbHTML(deedId, side, src, idx) {
-  return `<div class="img-thumb">
-    <img src="${escHtml(src)}" alt=""/>
-    <button class="img-del" onclick="removeImage('${deedId}','${side}',${idx})">×</button>
-  </div>`;
-}
-function addBtnHTML(deedId, side) {
-  return `<button class="img-add" onclick="document.getElementById('imgIn-${deedId}-${side}').click()">📷<span>เพิ่ม</span></button>
-  <input type="file" id="imgIn-${deedId}-${side}" accept="image/*" multiple capture="environment"
-    style="display:none" onchange="handleImg('${deedId}','${side}',event)"/>`;
-}
-
-// ─── Deed ops ─────────────────────────────────────────────────────────────────
-function updateDeed(id, k, v) {
-  const d = editingClient.deeds.find(x=>x.id===id);
-  if (d) d[k] = v;
-}
-function refreshCommission(deedId) {
-  const d  = editingClient.deeds.find(x=>x.id===deedId);
-  const el = document.getElementById(`comm-${deedId}`);
-  if (!d || !el) return;
-  const comm = calcCommission(d.price||"");
-  el.outerHTML = comm ? commHTML(deedId, comm)
-    : `<div id="comm-${deedId}" style="flex:2 1 260px;"></div>`;
-}
-function addDeed()       { editingClient.deeds.push(emptyDeed()); renderForm(); }
-function removeDeed(id)  {
-  if (editingClient.deeds.length <= 1) return;
-  editingClient.deeds = editingClient.deeds.filter(d=>d.id!==id);
-  renderForm();
-}
-
-// ─── Image ops ────────────────────────────────────────────────────────────────
-function handleImg(deedId, side, event) {
-  const files = Array.from(event.target.files);
-  const deed  = editingClient.deeds.find(d=>d.id===deedId);
-  const key   = side==='front'?'frontImages':'backImages';
-  let left    = files.length;
-  files.forEach(f => {
-    const r = new FileReader();
-    r.onload = ev => {
-      deed[key].push(ev.target.result);
-      if (--left === 0) refreshImages(deedId, side, deed[key]);
-    };
-    r.readAsDataURL(f);
+    if (result.success) {
+      msgEl.style.color = "#2e7d32";
+      msgEl.textContent = id ? "✅ แก้ไขประกาศสำเร็จ" : "✅ เพิ่มประกาศสำเร็จ";
+      resetForm();
+      loadListings();
+    } else {
+      msgEl.style.color = "#e53935";
+      msgEl.textContent = "❌ เกิดข้อผิดพลาด: " + result.message;
+    }
   });
-}
-function removeImage(deedId, side, idx) {
-  const deed = editingClient.deeds.find(d=>d.id===deedId);
-  const key  = side==='front'?'frontImages':'backImages';
-  deed[key].splice(idx, 1);
-  refreshImages(deedId, side, deed[key]);
-}
-function refreshImages(deedId, side, imgs) {
-  const el = document.getElementById(`${side}-${deedId}`);
-  if (!el) return;
-  el.innerHTML = imgs.map((s,i)=>thumbHTML(deedId,side,s,i)).join("") + addBtnHTML(deedId,side);
-}
 
-// ─── Appointments ─────────────────────────────────────────────────────────────
-function openAptModal() {
-  tempAppointments = JSON.parse(JSON.stringify(editingClient.appointments||[]));
-  renderAptList();
-  openModal("aptModal");
-}
-function renderAptList() {
-  const el = document.getElementById("aptList");
-  if (!el) return;
-  el.innerHTML = !tempAppointments.length
-    ? '<p style="color:#9ca3af;text-align:center;padding:12px 0;">ยังไม่มีนัดหมาย</p>'
-    : tempAppointments.map(a=>`
-      <div class="apt-item">
-        <div>
-          <div class="apt-date">📅 ${escHtml(a.date)}${a.time?' เวลา '+escHtml(a.time)+' น.':''}</div>
-          ${a.note?`<div class="apt-note">${escHtml(a.note)}</div>`:''}
-        </div>
-        <div class="apt-actions">
-          <a href="${toGCalURL(a.date,a.time,a.note)}" target="_blank"
-            class="btn btn-ghost btn-sm">📅 Google Cal</a>
-          <button class="btn btn-danger btn-sm" onclick="removeApt('${a.id}')">ลบ</button>
-        </div>
-      </div>`).join("");
-}
-function addAppointment() {
-  const date = document.getElementById("aptDate").value;
-  if (!date) return alert("กรุณาเลือกวันที่");
-  tempAppointments.push({
-    id: uid(), date,
-    time: document.getElementById("aptTime").value,
-    note: document.getElementById("aptNote").value
-  });
-  document.getElementById("aptDate").value = "";
-  document.getElementById("aptTime").value = "";
-  document.getElementById("aptNote").value = "";
-  renderAptList();
-}
-function removeApt(id) {
-  tempAppointments = tempAppointments.filter(a=>a.id!==id);
-  renderAptList();
-}
-function saveAppointments() {
-  editingClient.appointments = tempAppointments;
-  closeModal("aptModal");
-  renderForm();
-}
+  // ===== Cancel edit =====
+  document.getElementById("cancel-edit-btn").addEventListener("click", resetForm);
 
-// ─── Save / Delete client ─────────────────────────────────────────────────────
-async function saveClient() {
-  if (!editingClient.firstName.trim()) return alert("กรุณากรอกชื่อ");
-  if (!editingClient.phone.trim())     return alert("กรุณากรอกเบอร์โทรศัพท์");
-  const btn = document.getElementById("btnSaveClient");
-  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
-  setSyncStatus("saving");
-  const isNew = !allClients.find(c=>c.id===editingClient.id);
-  try {
-    await Storage.saveClient(editingClient);
-    if (isNew) notifyLine("เพิ่มลูกค้าใหม่", editingClient);
-    showToast(isNew ? "✅ เพิ่มลูกค้าใหม่แล้ว" : "✅ อัปเดตข้อมูลแล้ว");
-    showList();
-  } catch(e) {
-    showToast("❌ บันทึกไม่สำเร็จ: " + e.message, "error");
-    btn.disabled = false; btn.textContent = "💾 บันทึกข้อมูล";
+  function resetForm() {
+    ["edit-id","f-title","f-price","f-location","f-image","f-desc"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("f-type").value = "sale";
+    document.getElementById("form-title").textContent = "➕ เพิ่มประกาศใหม่";
+    document.getElementById("submit-btn").textContent = "บันทึกประกาศ";
+    document.getElementById("cancel-edit-btn").style.display = "none";
+    document.getElementById("form-msg").textContent = "";
   }
-}
-async function deleteClient(id) {
-  if (!confirm("ต้องการลบข้อมูลลูกค้านี้?")) return;
-  setSyncStatus("saving");
-  try {
-    await Storage.deleteClient(id);
-    showToast("🗑 ลบข้อมูลเรียบร้อย");
-  } catch(e) {
-    showToast("❌ ลบไม่สำเร็จ", "error");
-  }
-}
 
-// ─── Export / Import JSON ─────────────────────────────────────────────────────
-function exportJSON() {
-  const blob = new Blob([JSON.stringify(allClients,null,2)], {type:"application/json"});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url;
-  a.download = `ลูกค้าฝากขาย_${new Date().toLocaleDateString('th-TH')}.json`;
-  a.click(); URL.revokeObjectURL(url);
-  showToast("📤 ส่งออกข้อมูลเรียบร้อย");
-}
-function importJSON(e) {
-  const f = e.target.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = async ev => {
-    try {
-      const arr = JSON.parse(ev.target.result);
-      if (!Array.isArray(arr)) throw new Error("ไม่ใช่ JSON array");
-      let added = 0;
-      for (const item of arr) {
-        if (!allClients.find(c=>c.id===item.id)) {
-          await Storage.saveClient(item); added++;
-        }
-      }
-      showToast(`📥 นำเข้า ${added} รายการ`);
-    } catch(err) { alert("ไฟล์ไม่ถูกต้อง: "+err.message); }
+  // ===== Load listings =====
+  async function loadListings() {
+    const container = document.getElementById("listings-container");
+    const listings  = await getAllListings();
+
+    if (listings.length === 0) {
+      container.innerHTML = `<p style="color:#999">ยังไม่มีประกาศ</p>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="listings-table">
+        <thead>
+          <tr>
+            <th>ชื่อ</th>
+            <th>ประเภท</th>
+            <th>ราคา</th>
+            <th>ที่ตั้ง</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${listings.map(l => `
+            <tr>
+              <td>${l.title}</td>
+              <td><span class="${l.type === 'sale' ? 'tag-sale' : 'tag-rent'}">${l.type === 'sale' ? 'ขาย' : 'เช่า'}</span></td>
+              <td>฿${Number(l.price).toLocaleString()}</td>
+              <td>${l.location || '-'}</td>
+              <td>
+                <button class="btn-sm btn-edit" onclick="editListing('${l.id}','${encodeURIComponent(JSON.stringify(l))}')">แก้ไข</button>
+                <button class="btn-sm btn-del"  onclick="confirmDelete('${l.id}','${l.title}')">ลบ</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // ===== Edit =====
+  window.editListing = (id, encodedData) => {
+    const l = JSON.parse(decodeURIComponent(encodedData));
+    document.getElementById("edit-id").value      = id;
+    document.getElementById("f-title").value      = l.title       || "";
+    document.getElementById("f-type").value       = l.type        || "sale";
+    document.getElementById("f-price").value      = l.price       || "";
+    document.getElementById("f-location").value   = l.location    || "";
+    document.getElementById("f-image").value      = l.imageUrl    || "";
+    document.getElementById("f-desc").value       = l.description || "";
+    document.getElementById("form-title").textContent       = "✏️ แก้ไขประกาศ";
+    document.getElementById("submit-btn").textContent       = "อัปเดตประกาศ";
+    document.getElementById("cancel-edit-btn").style.display = "inline-block";
+    document.getElementById("form-msg").textContent = "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  r.readAsText(f);
-  e.target.value = "";
-}
 
-// ─── LINE Notify stub ─────────────────────────────────────────────────────────
-function notifyLine(action, client) {
-  // ตั้งค่า LINE Notify token ใน firebase-config.js แล้วใส่ที่นี่
-  console.log(`[LINE Notify] ${action}: ${client.firstName} ${client.lastName}`);
-}
-
-// ─── HTML escape ─────────────────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s||'').replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-                      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
+  // ===== Delete =====
+  window.confirmDelete = async (id, title) => {
+    if (!confirm(`ลบประกาศ "${title}" ใช่หรือไม่?`)) return;
+    const result = await deleteListing(id);
+    if (result.success) loadListings();
+    else alert("ลบไม่สำเร็จ: " + result.message);
+  };
 </script>
+
 </body>
 </html>
