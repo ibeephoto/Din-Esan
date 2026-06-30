@@ -62,6 +62,14 @@
     }
     .photo-buttons input[type=file]{ display:none; }
     .photo-preview { width:100%; max-width:160px; border-radius:10px; border:1px solid #ddd; margin-top:4px; display:none; }
+    .promo-gallery { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .promo-thumb-wrap { position:relative; width:72px; height:72px; }
+    .promo-thumb { width:72px; height:72px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block; }
+    .promo-remove {
+      position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
+      background:#ef4444; color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; padding:0;
+    }
     .btn-add-plot {
       background:#e0f2fe; color:#075985; border:none; border-radius:10px; padding:10px 14px; font-size:13.5px; font-weight:700; cursor:pointer;
     }
@@ -165,6 +173,9 @@
         <div class="field-row">
           <div class="field"><label>ราคารวมทุกแปลง (บาท)</label><input type="text" id="lTotalPriceDisplay" readonly style="background:#f3f4f6;"/></div>
           <div class="field"><label>อัตราค่านายหน้า (%)</label><input type="number" id="lCommissionRate" value="3" step="0.1" oninput="recalcCommission()"/></div>
+          <div class="field"><label>ค่าใช้จ่ายการตลาดเพิ่มเติม (บาท) <span style="font-weight:400;color:#888;">(ถ้าต้องการทำการตลาดเพิ่ม)</span></label>
+            <input type="number" id="lMarketingExtra" value="0"/>
+          </div>
           <div class="field"><label>วันที่ชำระ (วันที่เซ็นสัญญาแต่งตั้งนายหน้า)</label><input type="date" id="lContractDate"/></div>
         </div>
         <div class="commission-box">
@@ -516,6 +527,17 @@ function plotBlockHtml(p = {}) {
         <input type="hidden" class="p-imgback" value="${p.imgBack||''}"/>
       </div>
     </div>
+    <div class="field field-full" style="margin-top:10px;">
+      <label>🖼️ รูปสำหรับโปรโมท (ใส่ได้หลายรูป)</label>
+      <div class="photo-buttons">
+        <label>📁 เลือกไฟล์<input type="file" accept="image/*" multiple class="p-promo-file" onchange="handlePromoPhoto(this,${n})"/></label>
+        <label>📷 ถ่ายภาพ<input type="file" accept="image/*" capture="environment" class="p-promo-cam" onchange="handlePromoPhoto(this,${n})"/></label>
+      </div>
+      <div class="promo-gallery p-promo-gallery" data-images='${JSON.stringify(p.promoImages || []).replace(/'/g,"&apos;")}'>
+        ${(p.promoImages || []).map((url, i) => `<div class="promo-thumb-wrap"><img class="promo-thumb" src="${url}"/><button type="button" class="promo-remove" onclick="removePromoImage(${n},${i})">✕</button></div>`).join("")}
+      </div>
+      <span class="photo-status p-promo-status" style="font-size:11.5px;color:#888;"></span>
+    </div>
   </div>`;
 }
 
@@ -559,6 +581,52 @@ async function handlePlotPhoto(input, n, side) {
   }
 }
 
+function getPromoImages(n) {
+  const block = document.getElementById("plot-" + n);
+  const gallery = block.querySelector(".p-promo-gallery");
+  try { return JSON.parse(gallery.dataset.images || "[]"); } catch { return []; }
+}
+
+function setPromoImages(n, arr) {
+  const block = document.getElementById("plot-" + n);
+  const gallery = block.querySelector(".p-promo-gallery");
+  gallery.dataset.images = JSON.stringify(arr);
+  gallery.innerHTML = arr.map((url, i) =>
+    `<div class="promo-thumb-wrap"><img class="promo-thumb" src="${url}"/><button type="button" class="promo-remove" onclick="removePromoImage(${n},${i})">✕</button></div>`
+  ).join("");
+}
+
+function removePromoImage(n, idx) {
+  const arr = getPromoImages(n);
+  arr.splice(idx, 1);
+  setPromoImages(n, arr);
+}
+
+async function handlePromoPhoto(input, n) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  const block = document.getElementById("plot-" + n);
+  const statusEl = block.querySelector(".p-promo-status");
+  input.disabled = true;
+  let arr = getPromoImages(n);
+
+  for (const file of files) {
+    statusEl.textContent = `⏳ กำลังอัปโหลด ${file.name}...`;
+    try {
+      const path = `listings/plot${n}_promo_${Date.now()}_${file.name}`;
+      const url = await Storage.uploadImage(file, path);
+      arr.push(url);
+      setPromoImages(n, arr);
+    } catch (e) {
+      statusEl.textContent = "❌ อัปโหลดไม่สำเร็จ: " + e.message;
+    }
+  }
+  statusEl.textContent = arr.length ? "✅ อัปโหลดสำเร็จ" : "";
+  setTimeout(() => { statusEl.textContent = ""; }, 2500);
+  input.disabled = false;
+  input.value = "";
+}
+
 function getPlotsFromForm() {
   return Array.from(document.querySelectorAll("#plotsContainer .plot-block")).map(block => ({
     deed:     block.querySelector(".p-deed").value.trim(),
@@ -571,6 +639,10 @@ function getPlotsFromForm() {
     price: Number(block.querySelector(".p-price").value) || 0,
     imgFront: block.querySelector(".p-imgfront").value,
     imgBack:  block.querySelector(".p-imgback").value,
+    promoImages: (() => {
+      try { return JSON.parse(block.querySelector(".p-promo-gallery").dataset.images || "[]"); }
+      catch { return []; }
+    })(),
   }));
 }
 
@@ -598,6 +670,7 @@ function resetListingForm() {
   document.getElementById("lType").value = "ที่ดินเปล่า";
   document.getElementById("lStatus").value = "พร้อมขาย";
   document.getElementById("lCommissionRate").value = 3;
+  document.getElementById("lMarketingExtra").value = 0;
   document.getElementById("lContractDate").value = "";
   document.getElementById("plotsContainer").innerHTML = "";
   addPlotBlock();
@@ -613,6 +686,7 @@ async function saveListingForm() {
   const firstPlot = plots[0] || {};
   const id = document.getElementById("listingEditId").value || uid();
   const rate = Number(document.getElementById("lCommissionRate").value) || 0;
+  const extra = Number(document.getElementById("lMarketingExtra").value) || 0;
   const commission = totalPrice * rate / 100;
 
   const item = {
@@ -626,6 +700,7 @@ async function saveListingForm() {
     province: firstPlot.province || "",
     commissionRate: rate,
     commissionAmount: commission,
+    marketingExtra: extra,
     netAfterCommission: totalPrice - commission,
     contractDate: document.getElementById("lContractDate").value,
     note: document.getElementById("lNote").value.trim(),
@@ -643,6 +718,7 @@ function editListing(id) {
   document.getElementById("lStatus").value = l.status || "พร้อมขาย";
   document.getElementById("lDesc").value   = l.description || "";
   document.getElementById("lCommissionRate").value = l.commissionRate ?? 3;
+  document.getElementById("lMarketingExtra").value = l.marketingExtra ?? 0;
   document.getElementById("lContractDate").value   = l.contractDate || "";
   document.getElementById("lNote").value   = l.note || "";
 
