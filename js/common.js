@@ -76,21 +76,6 @@ function toGCalURL(date, time, note) {
 
 // ─── Sample listings ──────────────────────────────────────────────────────────
 const SAMPLE_LISTINGS = [
-  // ─── LINE Notify (ผ่าน Google Apps Script relay) ──────────────────────────────
-async function notifyLine(message) {
-  if (!LINE_RELAY_URL) return; // ไม่ได้ตั้งค่าไว้ = ปิดการแจ้งเตือน
-
-  try {
-    await fetch(LINE_RELAY_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ message })
-    });
-  } catch (err) {
-    console.error("แจ้งเตือน LINE ล้มเหลว:", err);
-  }
-}
   {
     id: "sample3",
     title: "ที่ดินวิวภูเขา ใกล้แหล่งท่องเที่ยว",
@@ -116,4 +101,3 @@ async function notifyLine(message) {
     console.error("แจ้งเตือน LINE ล้มเหลว:", err);
   }
 }
-];
