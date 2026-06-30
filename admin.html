@@ -1,379 +1,396 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel — Property Site</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
-
-    /* ===== LOGIN ===== */
-    #login-section {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh;
-    }
-    .login-box {
-      background: #fff; padding: 2.5rem; border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,.1); width: 100%; max-width: 380px;
-    }
-    .login-box h1 { font-size: 1.4rem; margin-bottom: 1.5rem; text-align: center; color: #1a73e8; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: .85rem; margin-bottom: .4rem; color: #555; }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: .65rem .9rem; border: 1px solid #ddd;
-      border-radius: 8px; font-size: .95rem; transition: border .2s;
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-      outline: none; border-color: #1a73e8;
-    }
-    .form-group textarea { resize: vertical; min-height: 100px; }
-    .btn {
-      width: 100%; padding: .75rem; border: none; border-radius: 8px;
-      font-size: 1rem; cursor: pointer; transition: background .2s;
-    }
-    .btn-primary { background: #1a73e8; color: #fff; }
-    .btn-primary:hover { background: #1558b0; }
-    .btn-danger { background: #e53935; color: #fff; margin-top: .5rem; }
-    .btn-danger:hover { background: #b71c1c; }
-    .error-msg { color: #e53935; font-size: .85rem; margin-top: .75rem; text-align: center; }
-
-    /* ===== ADMIN PANEL ===== */
-    #admin-section { display: none; }
-    .admin-header {
-      background: #1a73e8; color: #fff; padding: 1rem 2rem;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .admin-header h1 { font-size: 1.2rem; }
-    .admin-header button {
-      background: rgba(255,255,255,.2); color: #fff; border: none;
-      padding: .5rem 1rem; border-radius: 6px; cursor: pointer; font-size: .9rem;
-    }
-    .admin-header button:hover { background: rgba(255,255,255,.35); }
-
-    .admin-body { max-width: 750px; margin: 2rem auto; padding: 0 1rem; }
-
-    .card {
-      background: #fff; border-radius: 12px; padding: 2rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 2rem;
-    }
-    .card h2 { font-size: 1.1rem; margin-bottom: 1.5rem; color: #333; }
-
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media(max-width:500px) { .form-row { grid-template-columns: 1fr; } }
-
-    .success-msg { color: #2e7d32; font-size: .9rem; margin-top: .75rem; text-align: center; }
-
-    /* Export buttons */
-    .export-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem;
-    }
-    .btn-export {
-      padding: .65rem 1rem; border: none; border-radius: 8px; cursor: pointer;
-      font-size: .9rem; font-weight: 500; transition: opacity .2s; text-align: center;
-    }
-    .btn-export:hover { opacity: .85; }
-    .btn-csv  { background: #e8f5e9; color: #2e7d32; }
-    .btn-xlsx { background: #e3f2fd; color: #1565c0; }
-    .btn-all  { background: #fce4ec; color: #880e4f; }
-
-    /* Listings table */
-    .listings-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    .listings-table th { background: #f5f5f5; padding: .6rem .8rem; text-align: left; }
-    .listings-table td { padding: .6rem .8rem; border-bottom: 1px solid #eee; vertical-align: top; }
-    .listings-table tr:hover td { background: #fafafa; }
-    .btn-sm {
-      padding: .3rem .7rem; border: none; border-radius: 5px;
-      font-size: .8rem; cursor: pointer; margin-right: .3rem;
-    }
-    .btn-edit { background: #fff3e0; color: #e65100; }
-    .btn-del  { background: #fce4ec; color: #c62828; }
-    .tag-sale { background: #e8f5e9; color: #2e7d32; padding: .15rem .5rem; border-radius: 4px; }
-    .tag-rent { background: #e3f2fd; color: #1565c0; padding: .15rem .5rem; border-radius: 4px; }
-  </style>
-  <!-- SheetJS สำหรับ Export XLSX -->
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — ดินอีสาน</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <!-- SheetJS สำหรับ Export Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { background:#f3f4f6; }
+    .admin-shell { max-width: 980px; margin: 0 auto; padding: 24px 16px 60px; }
+    .admin-top {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 10px;
+    }
+    .admin-top h1 { font-size: 22px; font-weight: 800; }
+    .card {
+      background:#fff; border-radius:16px; padding:24px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:24px;
+    }
+    .card h2 { font-size:16px; font-weight:800; margin-bottom:16px; }
+    .field-row { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+    .field-full { grid-column: 1 / -1; }
+    @media (max-width:600px){ .field-row{ grid-template-columns:1fr; } }
+    .field label { display:block; font-size:13px; color:#555; margin-bottom:5px; font-weight:600; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:10px; font-size:14px;
+    }
+    .field textarea { min-height:90px; resize:vertical; }
+    .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .data-table th { background:#f9fafb; text-align:left; padding:10px 12px; }
+    .data-table td { padding:10px 12px; border-bottom:1px solid #eee; vertical-align:top; }
+    .data-table tr:hover td { background:#fafafa; }
+    .export-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+    .btn-export {
+      padding:10px 14px; border:none; border-radius:10px; cursor:pointer;
+      font-size:13.5px; font-weight:700; text-align:center; transition:opacity .15s;
+    }
+    .btn-export:hover{ opacity:.85; }
+    .btn-csv  { background:#e8f5e9; color:#1a6b3c; }
+    .btn-xlsx { background:#e3f2fd; color:#1565c0; }
+    .btn-all  { background:#fce4ec; color:#880e4f; }
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  </style>
 </head>
 <body>
 
-<!-- ===== LOGIN ===== -->
-<section id="login-section">
-  <div class="login-box">
-    <h1>🔐 Admin Login</h1>
-    <div class="form-group">
+<!-- ─── Login Section ─── -->
+<div class="login-wrap" id="loginSection">
+  <div class="card" style="max-width:380px; width:100%;">
+    <h2 style="margin-bottom:18px; font-size:18px;">🔒 เข้าสู่ระบบแอดมิน</h2>
+    <div class="field" style="margin-bottom:12px;">
       <label>อีเมล</label>
-      <input type="email" id="login-email" placeholder="admin@example.com">
+      <input type="email" id="loginEmail" placeholder="admin@example.com"/>
     </div>
-    <div class="form-group">
+    <div class="field" style="margin-bottom:14px;">
       <label>รหัสผ่าน</label>
-      <input type="password" id="login-password" placeholder="••••••••">
+      <input type="password" id="loginPw" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')doAdminLogin()"/>
     </div>
-    <button class="btn btn-primary" id="login-btn">เข้าสู่ระบบ</button>
-    <p class="error-msg" id="login-error"></p>
+    <button class="btn btn-primary" style="width:100%;" id="btnAdminLogin" onclick="doAdminLogin()">เข้าสู่ระบบ</button>
+    <p id="loginErr" style="color:#ef4444; font-size:13px; margin-top:10px; text-align:center; display:none;"></p>
+    <p style="text-align:center; margin-top:14px;"><a href="index.html" style="font-size:13px; color:#888;">← กลับหน้าหลัก</a></p>
   </div>
-</section>
+</div>
 
-<!-- ===== ADMIN PANEL ===== -->
-<section id="admin-section">
-  <header class="admin-header">
-    <h1>🏠 Admin Panel — Property Site</h1>
-    <button id="logout-btn">ออกจากระบบ</button>
-  </header>
+<!-- ─── Admin Panel (แสดงเมื่อ login สำเร็จ) ─── -->
+<div id="adminPanel" style="display:none;">
+  <div class="admin-shell">
+    <div class="admin-top">
+      <h1>📋 Admin Panel — ดินอีสาน</h1>
+      <div style="display:flex; gap:10px;">
+        <a href="index.html" class="btn btn-ghost btn-sm">🏠 หน้าหลัก</a>
+        <button class="btn btn-ghost btn-sm" onclick="adminLogout()">🚪 ออกจากระบบ</button>
+      </div>
+    </div>
 
-  <div class="admin-body">
-
-    <!-- ฟอร์มโพสต์ประกาศ -->
+    <!-- ─── จัดการลูกค้า ─── -->
     <div class="card">
-      <h2 id="form-title">➕ เพิ่มประกาศใหม่</h2>
-      <input type="hidden" id="edit-id">
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>ชื่อประกาศ *</label>
-          <input type="text" id="f-title" placeholder="เช่น ขายบ้าน 2 ชั้น ย่านลาดพร้าว">
-        </div>
-        <div class="form-group">
-          <label>ประเภท *</label>
-          <select id="f-type">
-            <option value="sale">ขาย</option>
-            <option value="rent">เช่า</option>
+      <h2>👤 ลูกค้า / ผู้ติดต่อ</h2>
+      <input type="hidden" id="clientEditId"/>
+      <div class="field-row">
+        <div class="field"><label>ชื่อลูกค้า</label><input type="text" id="cName" placeholder="ชื่อ-นามสกุล"/></div>
+        <div class="field"><label>เบอร์โทร</label><input type="text" id="cPhone" placeholder="08x-xxx-xxxx"/></div>
+        <div class="field"><label>สนใจรายการ</label><input type="text" id="cInterest" placeholder="เช่น ที่ดินเปล่า อ.เมือง"/></div>
+        <div class="field"><label>ช่องทางติดต่อ</label>
+          <select id="cChannel">
+            <option>Facebook</option><option>Line</option><option>โทรศัพท์</option><option>อื่นๆ</option>
           </select>
         </div>
+        <div class="field field-full"><label>บันทึกเพิ่มเติม</label><textarea id="cNote" placeholder="รายละเอียดการติดต่อ..."></textarea></div>
       </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>ราคา (บาท) *</label>
-          <input type="number" id="f-price" placeholder="3500000">
-        </div>
-        <div class="form-group">
-          <label>ที่ตั้ง</label>
-          <input type="text" id="f-location" placeholder="เช่น ลาดพร้าว กรุงเทพฯ">
-        </div>
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" id="btnSaveClient" onclick="saveClient()">💾 บันทึกลูกค้า</button>
+        <button class="btn btn-ghost btn-sm" id="btnCancelClient" style="display:none;" onclick="resetClientForm()">ยกเลิกแก้ไข</button>
       </div>
+      <p id="clientMsg" style="margin-top:10px; font-size:13px;"></p>
 
-      <div class="form-group">
-        <label>URL รูปภาพ (ถ้ามี)</label>
-        <input type="url" id="f-image" placeholder="https://...">
+      <div style="overflow-x:auto; margin-top:18px;">
+        <table class="data-table" id="clientsTable">
+          <thead><tr><th>ชื่อ</th><th>เบอร์</th><th>สนใจ</th><th>ช่องทาง</th><th>จัดการ</th></tr></thead>
+          <tbody><tr><td colspan="5" style="color:#999;">กำลังโหลด...</td></tr></tbody>
+        </table>
       </div>
-
-      <div class="form-group">
-        <label>รายละเอียด</label>
-        <textarea id="f-desc" placeholder="บรรยายรายละเอียดอสังหาริมทรัพย์..."></textarea>
-      </div>
-
-      <button class="btn btn-primary" id="submit-btn">บันทึกประกาศ</button>
-      <button class="btn btn-danger" id="cancel-edit-btn" style="display:none">ยกเลิกการแก้ไข</button>
-      <p id="form-msg" style="margin-top:.75rem; text-align:center; font-size:.9rem;"></p>
     </div>
 
-    <!-- Export / สำรองข้อมูล -->
+    <!-- ─── Export / สำรองข้อมูล ─── -->
     <div class="card">
       <h2>💾 Export / สำรองข้อมูล</h2>
-      <p style="color:#666; font-size:.9rem; margin-bottom:1rem;">เลือก collection และรูปแบบไฟล์ที่ต้องการ</p>
+      <p style="color:#666; font-size:13.5px; margin-bottom:14px;">ดาวน์โหลดข้อมูลเก็บไว้เป็นไฟล์ CSV หรือ Excel</p>
 
-      <p style="font-weight:600; margin-bottom:.5rem; font-size:.9rem;">🏠 ประกาศ (listings)</p>
-      <div class="export-grid" style="margin-bottom:1.25rem;">
-        <button class="btn-export btn-csv"  id="exp-listings-csv">⬇ CSV</button>
-        <button class="btn-export btn-xlsx" id="exp-listings-xlsx">⬇ Excel (.xlsx)</button>
+      <p style="font-weight:700; font-size:13.5px; margin-bottom:8px;">🏠 ประกาศ (listings)</p>
+      <div class="export-grid" style="margin-bottom:18px;">
+        <button class="btn-export btn-csv"  onclick="exportListings('csv')">⬇ CSV</button>
+        <button class="btn-export btn-xlsx" onclick="exportListings('xlsx')">⬇ Excel (.xlsx)</button>
       </div>
 
-      <p style="font-weight:600; margin-bottom:.5rem; font-size:.9rem;">👤 ลูกค้า / ผู้ใช้ (users)</p>
-      <div class="export-grid" style="margin-bottom:1.25rem;">
-        <button class="btn-export btn-csv"  id="exp-users-csv">⬇ CSV</button>
-        <button class="btn-export btn-xlsx" id="exp-users-xlsx">⬇ Excel (.xlsx)</button>
+      <p style="font-weight:700; font-size:13.5px; margin-bottom:8px;">👤 ลูกค้า (clients)</p>
+      <div class="export-grid" style="margin-bottom:18px;">
+        <button class="btn-export btn-csv"  onclick="exportClients('csv')">⬇ CSV</button>
+        <button class="btn-export btn-xlsx" onclick="exportClients('xlsx')">⬇ Excel (.xlsx)</button>
       </div>
 
-      <p style="font-weight:600; margin-bottom:.5rem; font-size:.9rem;">📦 ทั้งหมดในไฟล์เดียว</p>
+      <p style="font-weight:700; font-size:13.5px; margin-bottom:8px;">📦 รวมทั้งหมดในไฟล์เดียว</p>
       <div class="export-grid">
-        <button class="btn-export btn-all" id="exp-all-csv">⬇ CSV (2 ไฟล์)</button>
-        <button class="btn-export btn-all" id="exp-all-xlsx">⬇ Excel รวม (2 sheet)</button>
+        <button class="btn-export btn-all" onclick="exportAllCSV()">⬇ CSV (2 ไฟล์)</button>
+        <button class="btn-export btn-all" onclick="exportAllXLSX()">⬇ Excel รวม (2 sheet)</button>
       </div>
-
-      <p id="export-msg" style="margin-top:.75rem; font-size:.85rem; color:#666;"></p>
+      <p id="exportMsg" style="margin-top:10px; font-size:13px; color:#666;"></p>
     </div>
 
-    <!-- รายการประกาศทั้งหมด -->
+    <!-- ─── รายการประกาศ (ไปจัดการที่หน้าหลักได้) ─── -->
     <div class="card">
-      <h2>📋 ประกาศทั้งหมด</h2>
-      <div id="listings-container">
-        <p style="color:#999">กำลังโหลด...</p>
+      <h2>🏠 ประกาศทั้งหมด</h2>
+      <p style="font-size:13.5px; color:#666; margin-bottom:14px;">
+        เพิ่ม/แก้ไข/ลบประกาศได้จากหน้าหลัก (กดปุ่ม "➕ เพิ่มรายการ" หลัง login) — ตารางนี้แสดงไว้ดูอย่างเดียว
+      </p>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="listingsTable">
+          <thead><tr><th>ชื่อ</th><th>ประเภท</th><th>ราคา</th><th>อำเภอ/จังหวัด</th></tr></thead>
+          <tbody><tr><td colspan="4" style="color:#999;">กำลังโหลด...</td></tr></tbody>
+        </table>
       </div>
     </div>
 
   </div>
-</section>
+</div>
 
-<script type="module">
-  import { login, logout, watchAuthState } from "./js/auth.js";
-  import { addListing, updateListing, deleteListing } from "./js/admin.js";
-  import { getAllListings } from "./js/listings.js";
-  import { exportListings, exportUsers, exportAll } from "./js/export.js";
+<!-- ─── Firebase SDK ─── -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  // ===== Auth state =====
-  watchAuthState(user => {
-    if (user) {
-      document.getElementById("login-section").style.display = "none";
-      document.getElementById("admin-section").style.display = "block";
-      loadListings();
-    } else {
-      document.getElementById("login-section").style.display = "flex";
-      document.getElementById("admin-section").style.display = "none";
-    }
-  });
+<!-- ─── App scripts (ใช้ของเดิมร่วมกับหน้าหลัก) ─── -->
+<script src="js/firebase-config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/db.js"></script>
 
-  // ===== Login =====
-  document.getElementById("login-btn").addEventListener("click", async () => {
-    const email    = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
-    const errorEl  = document.getElementById("login-error");
+<script>
+let allClientsAdmin  = [];
+let allListingsAdmin = [];
+let unsubClientsAdmin = null;
+let unsubListingsAdmin = null;
 
-    if (!email || !password) { errorEl.textContent = "กรุณากรอกอีเมลและรหัสผ่าน"; return; }
+// ─── Escape HTML (กัน XSS เวลา render ตาราง) ──────────────────────────────────
+function escHtml(s) {
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+                  .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
 
-    const result = await login(email, password);
-    if (!result.success) errorEl.textContent = result.message;
-  });
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+firebaseAuth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("adminPanel").style.display   = "block";
+    startAdminListeners();
+  } else {
+    document.getElementById("loginSection").style.display = "flex";
+    document.getElementById("adminPanel").style.display   = "none";
+    if (unsubClientsAdmin)  unsubClientsAdmin();
+    if (unsubListingsAdmin) unsubListingsAdmin();
+  }
+});
 
-  // ===== Logout =====
-  document.getElementById("logout-btn").addEventListener("click", () => logout());
+async function doAdminLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pw    = document.getElementById("loginPw").value;
+  const errEl = document.getElementById("loginErr");
+  const btn   = document.getElementById("btnAdminLogin");
 
-  // ===== Submit ประกาศ =====
-  document.getElementById("submit-btn").addEventListener("click", async () => {
-    const id    = document.getElementById("edit-id").value;
-    const title = document.getElementById("f-title").value.trim();
-    const type  = document.getElementById("f-type").value;
-    const price = document.getElementById("f-price").value;
-    const msgEl = document.getElementById("form-msg");
+  if (!email || !pw) {
+    errEl.textContent = "กรุณากรอกอีเมลและรหัสผ่าน";
+    errEl.style.display = "block";
+    return;
+  }
+  btn.disabled = true; btn.textContent = "กำลังเข้าสู่ระบบ...";
+  errEl.style.display = "none";
 
-    if (!title || !price) {
-      msgEl.style.color = "#e53935";
-      msgEl.textContent = "กรุณากรอกชื่อประกาศและราคา";
-      return;
-    }
-
-    const data = {
-      title,
-      type,
-      price:       Number(price),
-      location:    document.getElementById("f-location").value.trim(),
-      description: document.getElementById("f-desc").value.trim(),
-      imageUrl:    document.getElementById("f-image").value.trim(),
+  try {
+    await firebaseAuth.signInWithEmailAndPassword(email, pw);
+  } catch (e) {
+    const map = {
+      "auth/user-not-found":     "ไม่พบบัญชีนี้ในระบบ",
+      "auth/wrong-password":     "รหัสผ่านไม่ถูกต้อง",
+      "auth/invalid-email":      "รูปแบบอีเมลไม่ถูกต้อง",
+      "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+      "auth/too-many-requests":  "ลองมากเกินไป กรุณารอสักครู่",
     };
+    errEl.textContent = map[e.code] || "เกิดข้อผิดพลาด กรุณาลองใหม่";
+    errEl.style.display = "block";
+  }
+  btn.disabled = false; btn.textContent = "เข้าสู่ระบบ";
+}
 
-    msgEl.style.color = "#666";
-    msgEl.textContent = "กำลังบันทึก...";
+function adminLogout() { firebaseAuth.signOut(); }
 
-    const result = id ? await updateListing(id, data) : await addListing(data);
-
-    if (result.success) {
-      msgEl.style.color = "#2e7d32";
-      msgEl.textContent = id ? "✅ แก้ไขประกาศสำเร็จ" : "✅ เพิ่มประกาศสำเร็จ";
-      resetForm();
-      loadListings();
-    } else {
-      msgEl.style.color = "#e53935";
-      msgEl.textContent = "❌ เกิดข้อผิดพลาด: " + result.message;
-    }
+// ─── Real-time data ───────────────────────────────────────────────────────────
+function startAdminListeners() {
+  unsubClientsAdmin = Storage.onClients(list => {
+    allClientsAdmin = list;
+    renderClientsTable();
   });
+  unsubListingsAdmin = Storage.onListings(list => {
+    allListingsAdmin = list;
+    renderListingsTable();
+  });
+}
 
-  // ===== Cancel edit =====
-  document.getElementById("cancel-edit-btn").addEventListener("click", resetForm);
-
-  function resetForm() {
-    ["edit-id","f-title","f-price","f-location","f-image","f-desc"].forEach(id => {
-      document.getElementById(id).value = "";
-    });
-    document.getElementById("f-type").value = "sale";
-    document.getElementById("form-title").textContent = "➕ เพิ่มประกาศใหม่";
-    document.getElementById("submit-btn").textContent = "บันทึกประกาศ";
-    document.getElementById("cancel-edit-btn").style.display = "none";
-    document.getElementById("form-msg").textContent = "";
+// ─── Clients CRUD ─────────────────────────────────────────────────────────────
+function renderClientsTable() {
+  const tbody = document.querySelector("#clientsTable tbody");
+  if (!allClientsAdmin.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#999;">ยังไม่มีข้อมูลลูกค้า</td></tr>`;
+    return;
   }
+  tbody.innerHTML = allClientsAdmin.map(c => `
+    <tr>
+      <td>${escHtml(c.name||'')}</td>
+      <td>${escHtml(c.phone||'')}</td>
+      <td>${escHtml(c.interest||'')}</td>
+      <td>${escHtml(c.channel||'')}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick='editClient(${JSON.stringify(c).replace(/'/g,"&apos;")})'>✏ แก้ไข</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteClientRow('${c.id}')">🗑 ลบ</button>
+      </td>
+    </tr>
+  `).join("");
+}
 
-  // ===== Load listings =====
-  async function loadListings() {
-    const container = document.getElementById("listings-container");
-    const listings  = await getAllListings();
+function editClient(c) {
+  document.getElementById("clientEditId").value = c.id;
+  document.getElementById("cName").value     = c.name     || "";
+  document.getElementById("cPhone").value    = c.phone    || "";
+  document.getElementById("cInterest").value = c.interest || "";
+  document.getElementById("cChannel").value  = c.channel  || "Facebook";
+  document.getElementById("cNote").value     = c.note     || "";
+  document.getElementById("btnCancelClient").style.display = "inline-block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-    if (listings.length === 0) {
-      container.innerHTML = `<p style="color:#999">ยังไม่มีประกาศ</p>`;
-      return;
-    }
+function resetClientForm() {
+  ["clientEditId","cName","cPhone","cInterest","cNote"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("cChannel").value = "Facebook";
+  document.getElementById("btnCancelClient").style.display = "none";
+  document.getElementById("clientMsg").textContent = "";
+}
 
-    container.innerHTML = `
-      <table class="listings-table">
-        <thead>
-          <tr>
-            <th>ชื่อ</th>
-            <th>ประเภท</th>
-            <th>ราคา</th>
-            <th>ที่ตั้ง</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${listings.map(l => `
-            <tr>
-              <td>${l.title}</td>
-              <td><span class="${l.type === 'sale' ? 'tag-sale' : 'tag-rent'}">${l.type === 'sale' ? 'ขาย' : 'เช่า'}</span></td>
-              <td>฿${Number(l.price).toLocaleString()}</td>
-              <td>${l.location || '-'}</td>
-              <td>
-                <button class="btn-sm btn-edit" onclick="editListing('${l.id}','${encodeURIComponent(JSON.stringify(l))}')">แก้ไข</button>
-                <button class="btn-sm btn-del"  onclick="confirmDelete('${l.id}','${l.title}')">ลบ</button>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+async function saveClient() {
+  const name = document.getElementById("cName").value.trim();
+  const msgEl = document.getElementById("clientMsg");
+  if (!name) {
+    msgEl.style.color = "#ef4444";
+    msgEl.textContent = "กรุณากรอกชื่อลูกค้า";
+    return;
   }
-
-  // ===== Edit =====
-  window.editListing = (id, encodedData) => {
-    const l = JSON.parse(decodeURIComponent(encodedData));
-    document.getElementById("edit-id").value      = id;
-    document.getElementById("f-title").value      = l.title       || "";
-    document.getElementById("f-type").value       = l.type        || "sale";
-    document.getElementById("f-price").value      = l.price       || "";
-    document.getElementById("f-location").value   = l.location    || "";
-    document.getElementById("f-image").value      = l.imageUrl    || "";
-    document.getElementById("f-desc").value       = l.description || "";
-    document.getElementById("form-title").textContent       = "✏️ แก้ไขประกาศ";
-    document.getElementById("submit-btn").textContent       = "อัปเดตประกาศ";
-    document.getElementById("cancel-edit-btn").style.display = "inline-block";
-    document.getElementById("form-msg").textContent = "";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const id = document.getElementById("clientEditId").value || uid();
+  const item = {
+    id, name,
+    phone:    document.getElementById("cPhone").value.trim(),
+    interest: document.getElementById("cInterest").value.trim(),
+    channel:  document.getElementById("cChannel").value,
+    note:     document.getElementById("cNote").value.trim(),
   };
-
-  // ===== Export =====
-  function setExportMsg(text) {
-    const el = document.getElementById("export-msg");
-    el.textContent = text;
-    setTimeout(() => { el.textContent = ""; }, 3000);
+  const btn = document.getElementById("btnSaveClient");
+  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+  try {
+    await Storage.saveClient(item);
+    msgEl.style.color = "#1a6b3c";
+    msgEl.textContent = "✅ บันทึกสำเร็จ";
+    resetClientForm();
+  } catch (e) {
+    msgEl.style.color = "#ef4444";
+    msgEl.textContent = "❌ บันทึกไม่สำเร็จ: " + e.message;
   }
+  btn.disabled = false; btn.textContent = "💾 บันทึกลูกค้า";
+}
 
-  async function handleExport(fn, label) {
-    setExportMsg(`⏳ กำลัง export ${label}...`);
-    await fn();
-    setExportMsg(`✅ Export ${label} สำเร็จ`);
+async function deleteClientRow(id) {
+  if (!confirm("ต้องการลบข้อมูลลูกค้านี้?")) return;
+  try {
+    await Storage.deleteClient(id);
+    showToast("🗑 ลบข้อมูลลูกค้าแล้ว");
+  } catch (e) {
+    showToast("❌ ลบไม่สำเร็จ", "error");
   }
+}
 
-  document.getElementById("exp-listings-csv") .addEventListener("click", () => handleExport(() => exportListings("csv"),  "listings CSV"));
-  document.getElementById("exp-listings-xlsx").addEventListener("click", () => handleExport(() => exportListings("xlsx"), "listings Excel"));
-  document.getElementById("exp-users-csv")    .addEventListener("click", () => handleExport(() => exportUsers("csv"),    "users CSV"));
-  document.getElementById("exp-users-xlsx")   .addEventListener("click", () => handleExport(() => exportUsers("xlsx"),   "users Excel"));
-  document.getElementById("exp-all-csv")      .addEventListener("click", () => handleExport(() => exportAll("csv"),      "ทั้งหมด CSV"));
-  document.getElementById("exp-all-xlsx")     .addEventListener("click", () => handleExport(() => exportAll("xlsx"),     "ทั้งหมด Excel"));
+// ─── Listings table (read-only view) ──────────────────────────────────────────
+function renderListingsTable() {
+  const tbody = document.querySelector("#listingsTable tbody");
+  if (!allListingsAdmin.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:#999;">ยังไม่มีประกาศ</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = allListingsAdmin.map(l => `
+    <tr>
+      <td>${escHtml(l.title||'')}</td>
+      <td>${escHtml(l.type||'')}</td>
+      <td>฿${escHtml(l.price||'—')}</td>
+      <td>${escHtml(l.district||'')} ${escHtml(l.province||'')}</td>
+    </tr>
+  `).join("");
+}
 
-  // ===== Delete =====
-  window.confirmDelete = async (id, title) => {
-    if (!confirm(`ลบประกาศ "${title}" ใช่หรือไม่?`)) return;
-    const result = await deleteListing(id);
-    if (result.success) loadListings();
-    else alert("ลบไม่สำเร็จ: " + result.message);
-  };
+// ─── Export helpers ───────────────────────────────────────────────────────────
+function dateStamp() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function toCSV(data) {
+  if (!data.length) return "";
+  const headers = Object.keys(data[0]).filter(k => k !== "createdAt" && k !== "updatedAt");
+  const rows = data.map(row => headers.map(h => `"${String(row[h]??"").replace(/"/g,'""')}"`).join(","));
+  return [headers.join(","), ...rows].join("\n");
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function setExportMsg(text) {
+  const el = document.getElementById("exportMsg");
+  el.textContent = text;
+  setTimeout(() => { el.textContent = ""; }, 3000);
+}
+
+function exportListings(format) {
+  if (!allListingsAdmin.length) { alert("ไม่มีข้อมูลประกาศ"); return; }
+  const name = `listings_${dateStamp()}`;
+  if (format === "xlsx") {
+    const ws = XLSX.utils.json_to_sheet(allListingsAdmin);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Listings");
+    XLSX.writeFile(wb, name + ".xlsx");
+  } else {
+    const bom = "\uFEFF";
+    downloadBlob(new Blob([bom + toCSV(allListingsAdmin)], { type:"text/csv;charset=utf-8;" }), name + ".csv");
+  }
+  setExportMsg("✅ Export ประกาศสำเร็จ");
+}
+
+function exportClients(format) {
+  if (!allClientsAdmin.length) { alert("ไม่มีข้อมูลลูกค้า"); return; }
+  const name = `clients_${dateStamp()}`;
+  if (format === "xlsx") {
+    const ws = XLSX.utils.json_to_sheet(allClientsAdmin);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Clients");
+    XLSX.writeFile(wb, name + ".xlsx");
+  } else {
+    const bom = "\uFEFF";
+    downloadBlob(new Blob([bom + toCSV(allClientsAdmin)], { type:"text/csv;charset=utf-8;" }), name + ".csv");
+  }
+  setExportMsg("✅ Export ลูกค้าสำเร็จ");
+}
+
+function exportAllCSV() {
+  exportListings("csv");
+  setTimeout(() => exportClients("csv"), 500);
+}
+
+function exportAllXLSX() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allListingsAdmin), "Listings");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allClientsAdmin),  "Clients");
+  XLSX.writeFile(wb, `backup_all_${dateStamp()}.xlsx`);
+  setExportMsg("✅ Export รวมสำเร็จ");
+}
 </script>
-
 </body>
 </html>

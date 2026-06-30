@@ -1,9 +1,9 @@
 // js/firebase-config.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// ⚠️ ไฟล์นี้เป็น "global script" ธรรมดา (ไม่ใช่ ES Module)
+// ต้องโหลดผ่าน <script src="js/firebase-config.js"></script> (ไม่มี type="module")
+// และต้องโหลด "หลัง" firebase-app-compat.js, firebase-firestore-compat.js, firebase-auth-compat.js
 
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyD5nAGiHNb98sCHMteLu-7RIYS6aZt0YzI",
   authDomain: "property-site-9dfc0.firebaseapp.com",
   projectId: "property-site-9dfc0",
@@ -13,9 +13,14 @@ const firebaseConfig = {
   measurementId: "G-B5P80KD0T0"
 };
 
-// ─── Admin password (เปลี่ยนได้เลย) ──────────────────────────────────────────
-const ADMIN_PASSWORD = "admin1234";
+// ─── เริ่มต้น Firebase (กันการ init ซ้ำ) ──────────────────────────────────────
+if (!firebase.apps.length) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+}
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+// ─── Auth instance ใช้งานทั่วทั้งเว็บผ่านตัวแปร global นี้ ─────────────────────
+const firebaseAuth = firebase.auth();
+
+// ─── ชื่อ Collection ใน Firestore (db.js เรียกใช้ตัวแปรเหล่านี้) ──────────────
+const COL_LISTINGS = "listings";
+const COL_CLIENTS  = "clients";

@@ -104,22 +104,27 @@
       <div class="modal-icon">🔒</div>
       <div>
         <h2 style="font-size:20px;font-weight:800;">เข้าสู่ระบบแอดมิน</h2>
-        <p style="font-size:14px;color:#888;margin-top:4px;">กรุณากรอกรหัสผ่าน</p>
+        <p style="font-size:14px;color:#888;margin-top:4px;">กรุณากรอกอีเมลและรหัสผ่าน</p>
       </div>
     </div>
     <div class="modal-body">
+      <div class="field field-full">
+        <label>อีเมล</label>
+        <input type="email" id="loginEmail" placeholder="admin@example.com"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
       <div class="field field-full">
         <label>รหัสผ่าน</label>
         <input type="password" id="loginPw" placeholder="รหัสผ่าน"
           onkeydown="if(event.key==='Enter')doLogin()"/>
       </div>
-      <p id="loginErr" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;">รหัสผ่านไม่ถูกต้อง</p>
+      <p id="loginErr" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;">อีเมลหรือรหัสผ่านไม่ถูกต้อง</p>
       <div class="modal-footer">
-        <button class="btn btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+        <button class="btn btn-primary" id="btnDoLogin" onclick="doLogin()">เข้าสู่ระบบ</button>
         <button class="btn btn-ghost"   onclick="pendingAdminNav=false;closeModal('loginModal')">ยกเลิก</button>
       </div>
       <p style="text-align:center;font-size:12px;color:#bbb;margin-top:12px;">
-        รหัสผ่านอยู่ใน js/firebase-config.js
+        จัดการบัญชีแอดมินได้ที่ Firebase Console → Authentication
       </p>
     </div>
   </div>
@@ -187,6 +192,7 @@
 <!-- ─── Firebase SDK ─── -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <!-- ─── App scripts ─── -->
 <script src="js/firebase-config.js"></script>
@@ -194,7 +200,7 @@
 <script src="js/db.js"></script>
 <script>
 // ─── State ────────────────────────────────────────────────────────────────────
-let isAdmin      = sessionStorage.getItem("isAdmin") === "1";
+let isAdmin      = false; // จะถูกอัปเดตโดย onAuthStateChanged ด้านล่าง
 let activeFilter = "ทั้งหมด";
 let allListings  = [];
 let unsubListings = null;
@@ -203,6 +209,14 @@ let pendingAdminNav = false; // true while waiting for password to navigate to a
 // ─── Init ─────────────────────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
   updateAdminUI();
+
+  // ติดตามสถานะ login จาก Firebase Auth จริง (แทน sessionStorage เดิม)
+  firebaseAuth.onAuthStateChanged(user => {
+    isAdmin = !!user;
+    sessionStorage.setItem("isAdmin", isAdmin ? "1" : "0");
+    updateAdminUI();
+    renderListings();
+  });
 
   // Real-time listener — fires every time Firestore data changes
   unsubListings = Storage.onListings(listings => {
@@ -295,41 +309,62 @@ function setFilter(btn) {
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-// เรียกจากปุ่ม/ลิ้งค์ที่จะไปหน้าแอดมิน — ต้องใส่รหัสผ่านก่อนทุกครั้ง ไม่ว่าจะเคยล็อกอินมาก่อนหรือไม่
+// เรียกจากปุ่ม/ลิ้งค์ที่จะไปหน้าแอดมิน — ต้องใส่อีเมล+รหัสผ่านก่อนทุกครั้ง ไม่ว่าจะเคยล็อกอินมาก่อนหรือไม่
 function requireAdminAccess() {
   pendingAdminNav = true;
+  document.getElementById("loginEmail").value = "";
   document.getElementById("loginPw").value = "";
   document.getElementById("loginErr").style.display = "none";
   openModal("loginModal");
 }
-function doLogin() {
-  const pw = document.getElementById("loginPw").value;
-  if (pw === ADMIN_PASSWORD) {
+
+async function doLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pw    = document.getElementById("loginPw").value;
+  const errEl = document.getElementById("loginErr");
+  const btn   = document.getElementById("btnDoLogin");
+
+  if (!email || !pw) {
+    errEl.textContent = "กรุณากรอกอีเมลและรหัสผ่าน";
+    errEl.style.display = "block";
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = "กำลังเข้าสู่ระบบ...";
+  errEl.style.display = "none";
+
+  try {
+    await firebaseAuth.signInWithEmailAndPassword(email, pw);
+    document.getElementById("loginEmail").value = "";
     document.getElementById("loginPw").value = "";
-    document.getElementById("loginErr").style.display = "none";
     closeModal("loginModal");
+
     if (pendingAdminNav) {
       pendingAdminNav = false;
-      // โทเค็นใช้ครั้งเดียว ส่งต่อไปให้ admin.html ตรวจสอบ จะไม่ค้างไว้ในเซสชัน
-      sessionStorage.setItem("adminGateToken", "1");
       window.location.href = "admin.html";
       return;
     }
-    isAdmin = true;
-    sessionStorage.setItem("isAdmin", "1");
-    updateAdminUI();
-    renderListings();
     showToast("✅ เข้าสู่ระบบสำเร็จ");
-  } else {
-    document.getElementById("loginErr").style.display = "block";
+  } catch (e) {
+    const map = {
+      "auth/user-not-found":     "ไม่พบบัญชีนี้ในระบบ",
+      "auth/wrong-password":     "รหัสผ่านไม่ถูกต้อง",
+      "auth/invalid-email":      "รูปแบบอีเมลไม่ถูกต้อง",
+      "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+      "auth/too-many-requests":  "ลองมากเกินไป กรุณารอสักครู่",
+    };
+    errEl.textContent = map[e.code] || "เกิดข้อผิดพลาด กรุณาลองใหม่";
+    errEl.style.display = "block";
   }
+
+  btn.disabled = false; btn.textContent = "เข้าสู่ระบบ";
 }
-function logout() {
-  isAdmin = false;
-  sessionStorage.removeItem("isAdmin");
-  updateAdminUI();
-  renderListings();
+
+async function logout() {
+  await firebaseAuth.signOut();
+  // onAuthStateChanged จะอัปเดต isAdmin / UI ให้อัตโนมัติ
 }
+
 function updateAdminUI() {
   const bar = document.getElementById("adminBar");
   bar.style.display = isAdmin ? "flex" : "none";

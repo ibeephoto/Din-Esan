@@ -449,31 +449,6 @@ body {
 .check-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--green); }
 .check-row label { font-size: 14px; color: #374151; cursor: pointer; }
 
-/* ─── Contact Buttons (Facebook / Line / Phone) ─── */
-.contact-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin: 16px 0;
-}
-.contact-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border-radius: 50px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  color: #fff;
-  transition: transform .15s, opacity .15s;
-}
-.contact-btn:hover { transform: translateY(-2px); opacity: .92; }
-.contact-fb    { background: #1877f2; }
-.contact-line  { background: #06c755; }
-.contact-phone { background: #f59e0b; }
-
 /* ─── Responsive ─── */
 @media (max-width: 600px) {
   .hero { padding: 32px 16px; }
@@ -482,7 +457,6 @@ body {
   .site-header .inner { padding: 0 12px; }
   .listings-grid { grid-template-columns: 1fr; }
   .admin-note { display: none; }
-  .contact-btn { padding: 9px 14px; font-size: 13px; }
 }
 
 /* ─── Print ─── */
