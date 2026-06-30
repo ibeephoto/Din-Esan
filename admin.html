@@ -87,7 +87,7 @@
     /* ─── Print ─── */
     @media print {
       #loginSection, .admin-top, .modal-backdrop, #btnSaveAll, #btnCancelAll,
-      .btn, button, .btn-export, .export-grid, .cal-nav, #aptModal, #appointmentCard,
+      .btn, button, .btn-export, .export-grid, .cal-nav, #aptModal, #appointmentCard, #exportCard, #importCard, #allListingsCard,
       input[type=file], .photo-buttons { display:none !important; }
       body { background:#fff; }
       .card { box-shadow:none; border:1px solid #ddd; }
@@ -239,7 +239,7 @@
     </div>
 
     <!-- ─── Export / สำรองข้อมูล ─── -->
-    <div class="card">
+    <div class="card" id="exportCard">
       <h2>💾 Export / สำรองข้อมูล</h2>
       <p style="color:#666; font-size:13.5px; margin-bottom:14px;">ดาวน์โหลดข้อมูลเก็บไว้เป็นไฟล์ CSV หรือ Excel</p>
 
@@ -264,7 +264,7 @@
     </div>
 
     <!-- ─── Import / นำเข้าข้อมูล ─── -->
-    <div class="card">
+    <div class="card" id="importCard">
       <h2>📥 Import / นำเข้าข้อมูล</h2>
       <p style="color:#666; font-size:13.5px; margin-bottom:14px;">
         นำเข้าข้อมูลจากไฟล์ CSV หรือ Excel (.xlsx) — แถวแรกของไฟล์ต้องเป็นหัวคอลัมน์ (header)
@@ -293,7 +293,7 @@
     </div>
 
     <!-- ─── รายการประกาศทั้งหมด ─── -->
-    <div class="card">
+    <div class="card" id="allListingsCard">
       <h2>🏠 ประกาศทั้งหมด</h2>
       <div style="overflow-x:auto;">
         <table class="data-table" id="listingsTable">
