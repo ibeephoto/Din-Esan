@@ -22,6 +22,9 @@ export async function addListing(data) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    if (typeof notifyLine === "function") {
+      notifyLine(`🏠 มีประกาศใหม่: ${data.title || "ไม่ระบุชื่อ"}\nราคา: ${data.price || "-"}`);
+    }
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error("addListing error:", error);
