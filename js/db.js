@@ -87,6 +87,33 @@ const DB = {
   async deleteClient(id) {
     await getDB().collection(COL_CLIENTS).doc(id).delete();
   },
+
+  // ─── APPOINTMENTS (นัดหมาย) ─────────────────────────────────────────────────
+
+  onAppointments(callback) {
+    return getDB()
+      .collection(COL_APPOINTMENTS)
+      .orderBy("date", "asc")
+      .onSnapshot(snap => {
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(docs);
+      }, err => {
+        console.error("Firestore appointments error:", err);
+        callback(LSFallback.getAppointments());
+      });
+  },
+
+  async saveAppointment(item) {
+    const db = getDB();
+    const { id, ...data } = item;
+    data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    if (!data.createdAt) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection(COL_APPOINTMENTS).doc(id).set(data, { merge: true });
+  },
+
+  async deleteAppointment(id) {
+    await getDB().collection(COL_APPOINTMENTS).doc(id).delete();
+  },
 };
 
 // ─── LocalStorage Fallback (ใช้เมื่อ Firebase ยังไม่ได้ตั้งค่า) ──────────────
@@ -101,6 +128,11 @@ const LSFallback = {
     catch { return []; }
   },
   saveClients(arr) { localStorage.setItem("prop_clients_v1", JSON.stringify(arr)); },
+  getAppointments() {
+    try { return JSON.parse(localStorage.getItem("prop_appointments_v1")) || []; }
+    catch { return []; }
+  },
+  saveAppointments(arr) { localStorage.setItem("prop_appointments_v1", JSON.stringify(arr)); },
 };
 
 // ─── Check ว่า Firebase ตั้งค่าแล้วหรือยัง ────────────────────────────────────
@@ -167,5 +199,36 @@ const Storage = {
       return;
     }
     await DB.deleteClient(id);
+  },
+
+  // ─── APPOINTMENTS ─────────────────────────────────────────────────────────
+  _appointmentsUnsub: null,
+
+  onAppointments(cb) {
+    if (!isFirebaseConfigured()) {
+      cb(LSFallback.getAppointments()); return () => {};
+    }
+    if (this._appointmentsUnsub) this._appointmentsUnsub();
+    this._appointmentsUnsub = DB.onAppointments(cb);
+    return this._appointmentsUnsub;
+  },
+
+  async saveAppointment(item) {
+    if (!isFirebaseConfigured()) {
+      const arr = LSFallback.getAppointments();
+      const idx = arr.findIndex(x => x.id === item.id);
+      if (idx >= 0) arr[idx] = item; else arr.push(item);
+      LSFallback.saveAppointments(arr);
+      return;
+    }
+    await DB.saveAppointment(item);
+  },
+
+  async deleteAppointment(id) {
+    if (!isFirebaseConfigured()) {
+      LSFallback.saveAppointments(LSFallback.getAppointments().filter(x => x.id !== id));
+      return;
+    }
+    await DB.deleteAppointment(id);
   },
 };

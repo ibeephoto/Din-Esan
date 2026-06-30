@@ -105,6 +105,38 @@
       </div>
     </div>
 
+    <!-- ─── ปฏิทินนัดหมาย ─── -->
+    <div class="card">
+      <div class="cal-head">
+        <h2 style="margin:0;">📅 ปฏิทินนัดหมาย</h2>
+        <button class="btn btn-primary btn-sm" onclick="openAptModal()">＋ เพิ่มนัดหมาย</button>
+      </div>
+
+      <div class="cal-wrap">
+        <!-- ปฏิทินรายเดือน -->
+        <div>
+          <div class="cal-head">
+            <span class="cal-title" id="calTitle">—</span>
+            <div class="cal-nav">
+              <button onclick="calPrev()" title="เดือนก่อนหน้า">‹</button>
+              <button class="cal-today-btn" onclick="calToday()">วันนี้</button>
+              <button onclick="calNext()" title="เดือนถัดไป">›</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="calDow"></div>
+          <div class="cal-grid" id="calGrid" style="margin-top:5px;"></div>
+        </div>
+
+        <!-- รายการนัดหมาย -->
+        <div>
+          <div class="cal-list-head" id="aptListHead">นัดหมายที่จะถึง</div>
+          <div class="cal-list" id="aptList">
+            <div class="cal-empty">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── Export / สำรองข้อมูล ─── -->
     <div class="card">
       <h2>💾 Export / สำรองข้อมูล</h2>
@@ -147,6 +179,54 @@
   </div>
 </div>
 
+<!-- ─── Appointment Modal (เพิ่ม/แก้ไขนัดหมาย) ─── -->
+<div class="modal-backdrop" id="aptModal" style="display:none;">
+  <div class="modal modal-md">
+    <div class="modal-head">
+      <div class="modal-icon">📅</div>
+      <div><h2 id="aptModalTitle" style="font-size:18px;font-weight:800;">เพิ่มนัดหมายใหม่</h2></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="aptEditId"/>
+      <div class="field-row">
+        <div class="field field-full">
+          <label>หัวข้อนัดหมาย <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="aptTitle" placeholder="เช่น พาลูกค้าดูที่ดิน อ.เมือง"/>
+        </div>
+        <div class="field">
+          <label>วันที่ <span style="color:#ef4444;">*</span></label>
+          <input type="date" id="aptDate"/>
+        </div>
+        <div class="field">
+          <label>เวลา</label>
+          <input type="time" id="aptTime"/>
+        </div>
+        <div class="field">
+          <label>ชื่อลูกค้า</label>
+          <input type="text" id="aptClient" placeholder="คุณ..."/>
+        </div>
+        <div class="field">
+          <label>เบอร์โทร</label>
+          <input type="text" id="aptPhone" placeholder="08x-xxx-xxxx"/>
+        </div>
+        <div class="field field-full">
+          <label>สถานที่ / รายการ</label>
+          <input type="text" id="aptPlace" placeholder="เช่น ที่ดินเปล่า ติดถนนใหญ่ อ.เมือง"/>
+        </div>
+        <div class="field field-full">
+          <label>บันทึกเพิ่มเติม</label>
+          <textarea id="aptNote" placeholder="รายละเอียดการนัด..."></textarea>
+        </div>
+      </div>
+      <p id="aptErr" style="color:#ef4444;font-size:13px;display:none;"></p>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnSaveApt" onclick="saveAppointment()">💾 บันทึกนัดหมาย</button>
+        <button class="btn btn-ghost" onclick="closeModal('aptModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ─── Firebase SDK ─── -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -160,8 +240,11 @@
 <script>
 let allClientsAdmin  = [];
 let allListingsAdmin = [];
+let allAppointments  = [];
 let unsubClientsAdmin = null;
 let unsubListingsAdmin = null;
+let unsubAppointmentsAdmin = null;
+let calView = new Date(); // เดือนที่กำลังแสดงในปฏิทิน
 
 // ─── Escape HTML (กัน XSS เวลา render ตาราง) ──────────────────────────────────
 function escHtml(s) {
@@ -180,6 +263,7 @@ firebaseAuth.onAuthStateChanged(user => {
     document.getElementById("adminPanel").style.display   = "none";
     if (unsubClientsAdmin)  unsubClientsAdmin();
     if (unsubListingsAdmin) unsubListingsAdmin();
+    if (unsubAppointmentsAdmin) unsubAppointmentsAdmin();
   }
 });
 
@@ -224,6 +308,11 @@ function startAdminListeners() {
   unsubListingsAdmin = Storage.onListings(list => {
     allListingsAdmin = list;
     renderListingsTable();
+  });
+  unsubAppointmentsAdmin = Storage.onAppointments(list => {
+    allAppointments = list;
+    renderCalendar();
+    renderAptList();
   });
 }
 
@@ -322,6 +411,210 @@ function renderListingsTable() {
     </tr>
   `).join("");
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+//  ปฏิทินนัดหมาย (Appointment Calendar)
+// ════════════════════════════════════════════════════════════════════════════
+const TH_MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+                   "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const TH_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+
+// คืนค่าวันที่รูปแบบ YYYY-MM-DD ตาม local time (ไม่ใช้ toISOString เพราะจะเพี้ยน timezone)
+function ymd(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function todayYMD() { return ymd(new Date()); }
+
+// แปลง YYYY-MM-DD → "15 ก.ค. 2569" (พ.ศ.)
+function fmtThaiDate(dateStr) {
+  if (!dateStr) return "";
+  const [y,m,dd] = dateStr.split("-").map(Number);
+  const shortM = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  return `${dd} ${shortM[m-1]} ${y+543}`;
+}
+
+function aptsOnDate(dateStr) {
+  return allAppointments.filter(a => a.date === dateStr);
+}
+
+// ─── วาดปฏิทินรายเดือน ────────────────────────────────────────────────────────
+function renderCalendar() {
+  const dowEl = document.getElementById("calDow");
+  if (!dowEl.children.length) {
+    dowEl.innerHTML = TH_DOW.map(d => `<div class="cal-dow">${d}</div>`).join("");
+  }
+
+  const year = calView.getFullYear();
+  const month = calView.getMonth();
+  document.getElementById("calTitle").textContent = `${TH_MONTHS[month]} ${year+543}`;
+
+  const firstDay = new Date(year, month, 1).getDay();    // 0=อา
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const today = todayYMD();
+
+  let cells = "";
+  for (let i=0; i<firstDay; i++) cells += `<div class="cal-cell empty"></div>`;
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const apts = aptsOnDate(dateStr);
+    const cls = ["cal-cell"];
+    if (dateStr === today) cls.push("today");
+    if (apts.length) cls.push("has-apt");
+    const badge = apts.length ? `<span class="cal-badge">${apts.length}</span>` : "";
+    cells += `<div class="${cls.join(' ')}" onclick="onCalDayClick('${dateStr}')">${d}${badge}</div>`;
+  }
+  document.getElementById("calGrid").innerHTML = cells;
+}
+
+function calPrev() { calView = new Date(calView.getFullYear(), calView.getMonth()-1, 1); renderCalendar(); }
+function calNext() { calView = new Date(calView.getFullYear(), calView.getMonth()+1, 1); renderCalendar(); }
+function calToday() { calView = new Date(); renderCalendar(); renderAptList(); }
+
+// คลิกวันในปฏิทิน → ถ้ามีนัด แสดงเฉพาะวันนั้น, ถ้าไม่มี เปิดฟอร์มเพิ่มนัดของวันนั้น
+function onCalDayClick(dateStr) {
+  const apts = aptsOnDate(dateStr);
+  if (apts.length) {
+    renderAptList(dateStr);
+  } else {
+    openAptModal(dateStr);
+  }
+}
+
+// ─── รายการนัดหมาย (ด้านขวา) ─────────────────────────────────────────────────
+function renderAptList(filterDate) {
+  const head = document.getElementById("aptListHead");
+  const listEl = document.getElementById("aptList");
+
+  let items;
+  if (filterDate) {
+    head.innerHTML = `นัดหมายวันที่ ${fmtThaiDate(filterDate)}
+      <button class="apt-mini-btn apt-mini-edit" style="margin-left:8px;" onclick="renderAptList()">↩ ดูทั้งหมด</button>`;
+    items = allAppointments.filter(a => a.date === filterDate);
+  } else {
+    head.textContent = "นัดหมายที่จะถึง";
+    const today = todayYMD();
+    items = allAppointments.filter(a => a.date >= today && !a.done);
+  }
+
+  // เรียงตามวันที่ + เวลา
+  items = items.slice().sort((a,b) =>
+    (a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
+
+  if (!items.length) {
+    listEl.innerHTML = `<div class="cal-empty">${filterDate ? "ไม่มีนัดหมายในวันนี้" : "ยังไม่มีนัดหมายที่จะถึง 🎉"}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = items.map(a => `
+    <div class="apt-card ${a.done ? 'done' : ''}">
+      <div class="apt-card-top">
+        <div>
+          <div class="apt-when">🗓 ${fmtThaiDate(a.date)}${a.time ? ' · '+escHtml(a.time)+' น.' : ''}${a.done ? ' · ✅ เสร็จแล้ว' : ''}</div>
+          <div class="apt-card-title">${escHtml(a.title||'(ไม่มีหัวข้อ)')}</div>
+        </div>
+      </div>
+      ${(a.client||a.phone||a.place||a.note) ? `<div class="apt-card-meta">
+        ${a.client ? `👤 ${escHtml(a.client)}` : ''}${a.phone ? ` · 📞 ${escHtml(a.phone)}` : ''}
+        ${a.place ? `<br>📍 ${escHtml(a.place)}` : ''}
+        ${a.note ? `<br>📝 ${escHtml(a.note)}` : ''}
+      </div>` : ''}
+      <div class="apt-card-btns">
+        <button class="apt-mini-btn apt-mini-done" onclick="toggleAptDone('${a.id}')">${a.done ? '↩ ยังไม่เสร็จ' : '✓ เสร็จแล้ว'}</button>
+        <button class="apt-mini-btn apt-mini-edit" onclick="editAppointment('${a.id}')">✏ แก้ไข</button>
+        <button class="apt-mini-btn apt-mini-del" onclick="deleteAppointment('${a.id}')">🗑 ลบ</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ─── Modal: เพิ่ม / แก้ไข ─────────────────────────────────────────────────────
+function openAptModal(presetDate) {
+  document.getElementById("aptModalTitle").textContent = "เพิ่มนัดหมายใหม่";
+  ["aptEditId","aptTitle","aptTime","aptClient","aptPhone","aptPlace","aptNote"]
+    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("aptDate").value = presetDate || todayYMD();
+  document.getElementById("aptErr").style.display = "none";
+  openModal("aptModal");
+}
+
+function editAppointment(id) {
+  const a = allAppointments.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById("aptModalTitle").textContent = "แก้ไขนัดหมาย";
+  document.getElementById("aptEditId").value = a.id;
+  document.getElementById("aptTitle").value  = a.title  || "";
+  document.getElementById("aptDate").value   = a.date   || todayYMD();
+  document.getElementById("aptTime").value   = a.time   || "";
+  document.getElementById("aptClient").value = a.client || "";
+  document.getElementById("aptPhone").value  = a.phone  || "";
+  document.getElementById("aptPlace").value  = a.place  || "";
+  document.getElementById("aptNote").value   = a.note   || "";
+  document.getElementById("aptErr").style.display = "none";
+  openModal("aptModal");
+}
+
+async function saveAppointment() {
+  const title = document.getElementById("aptTitle").value.trim();
+  const date  = document.getElementById("aptDate").value;
+  const errEl = document.getElementById("aptErr");
+
+  if (!title) { errEl.textContent = "กรุณากรอกหัวข้อนัดหมาย"; errEl.style.display = "block"; return; }
+  if (!date)  { errEl.textContent = "กรุณาเลือกวันที่"; errEl.style.display = "block"; return; }
+
+  const existing = allAppointments.find(x => x.id === document.getElementById("aptEditId").value);
+  const id = document.getElementById("aptEditId").value || uid();
+  const item = {
+    id, title, date,
+    time:   document.getElementById("aptTime").value,
+    client: document.getElementById("aptClient").value.trim(),
+    phone:  document.getElementById("aptPhone").value.trim(),
+    place:  document.getElementById("aptPlace").value.trim(),
+    note:   document.getElementById("aptNote").value.trim(),
+    done:   existing ? !!existing.done : false,
+  };
+
+  const btn = document.getElementById("btnSaveApt");
+  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+  try {
+    await Storage.saveAppointment(item);
+    // เลื่อนปฏิทินไปเดือนของนัดที่เพิ่งบันทึก
+    const [y,m] = date.split("-").map(Number);
+    calView = new Date(y, m-1, 1);
+    closeModal("aptModal");
+    showToast(existing ? "✅ อัปเดตนัดหมายแล้ว" : "✅ เพิ่มนัดหมายแล้ว");
+  } catch (e) {
+    errEl.textContent = "❌ บันทึกไม่สำเร็จ: " + e.message;
+    errEl.style.display = "block";
+  }
+  btn.disabled = false; btn.textContent = "💾 บันทึกนัดหมาย";
+}
+
+async function toggleAptDone(id) {
+  const a = allAppointments.find(x => x.id === id);
+  if (!a) return;
+  try {
+    await Storage.saveAppointment({ ...a, done: !a.done });
+    showToast(a.done ? "↩ ทำเครื่องหมายยังไม่เสร็จ" : "✅ ทำเครื่องหมายเสร็จแล้ว");
+  } catch (e) {
+    showToast("❌ อัปเดตไม่สำเร็จ", "error");
+  }
+}
+
+async function deleteAppointment(id) {
+  if (!confirm("ต้องการลบนัดหมายนี้?")) return;
+  try {
+    await Storage.deleteAppointment(id);
+    showToast("🗑 ลบนัดหมายแล้ว");
+  } catch (e) {
+    showToast("❌ ลบไม่สำเร็จ", "error");
+  }
+}
+
+// ปิด modal เมื่อคลิกพื้นหลัง
+document.addEventListener("click", e => {
+  const el = document.getElementById("aptModal");
+  if (el && e.target === el) closeModal("aptModal");
+});
 
 // ─── Export helpers ───────────────────────────────────────────────────────────
 function dateStamp() {

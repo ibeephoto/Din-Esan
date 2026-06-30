@@ -24,3 +24,4 @@ const firebaseAuth = firebase.auth();
 // ─── ชื่อ Collection ใน Firestore (db.js เรียกใช้ตัวแปรเหล่านี้) ──────────────
 const COL_LISTINGS = "listings";
 const COL_CLIENTS  = "clients";
+const COL_APPOINTMENTS = "appointments";
