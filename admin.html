@@ -607,14 +607,16 @@ function recalcCommission() {
   const rate = Number(document.getElementById("lCommissionRate").value) || 0;
   const extra = Number(document.getElementById("lMarketingExtra").value) || 0;
   const commission = total * rate / 100;
-  const net = total - commission - extra;
+  const net = total - commission; // คงเหลือสุทธิ = ราคารวม - ค่านายหน้า (ไม่หักค่าการตลาดเพิ่มเติม)
 
-  document.getElementById("lTotalPriceDisplay").value = total.toLocaleString("th-TH");
+  const fmt = n => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  document.getElementById("lTotalPriceDisplay").value = fmt(total);
   document.getElementById("ccRateLabel").textContent = rate;
-  document.getElementById("ccTotal").textContent = "฿" + total.toLocaleString("th-TH");
-  document.getElementById("ccCommission").textContent = "฿" + commission.toLocaleString("th-TH", {maximumFractionDigits:2});
-  document.getElementById("ccExtra").textContent = "฿" + extra.toLocaleString("th-TH");
-  document.getElementById("ccNet").textContent = "฿" + net.toLocaleString("th-TH", {maximumFractionDigits:2});
+  document.getElementById("ccTotal").textContent = "฿" + fmt(total);
+  document.getElementById("ccCommission").textContent = "฿" + fmt(commission);
+  document.getElementById("ccExtra").textContent = "฿" + fmt(extra);
+  document.getElementById("ccNet").textContent = "฿" + fmt(net);
 }
 
 // ─── Listings CRUD ────────────────────────────────────────────────────────────
@@ -661,7 +663,7 @@ async function saveListingForm() {
     commissionRate: rate,
     commissionAmount: commission,
     marketingExtra: extra,
-    netAfterCommission: totalPrice - commission - extra,
+    netAfterCommission: totalPrice - commission,
     contractDate: document.getElementById("lContractDate").value,
     note: document.getElementById("lNote").value.trim(),
   };
@@ -721,7 +723,7 @@ function renderListingsTable() {
     <tr>
       <td>${escHtml(l.title||'')}</td>
       <td>${escHtml(l.type||'')}</td>
-      <td>฿${Number(l.price||0).toLocaleString("th-TH")}</td>
+      <td>฿${Number(l.price||0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       <td>${escHtml(l.district||'')} ${escHtml(l.province||'')}</td>
       <td>
         <button class="btn btn-outline btn-sm" onclick="editListing('${l.id}')">✏ แก้ไข</button>
