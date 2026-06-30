@@ -77,7 +77,7 @@
 
     /* ─── Print ─── */
     @media print {
-      #loginSection, .admin-top, .modal-backdrop, #btnSaveListing, #btnCancelListing,
+      #loginSection, .admin-top, .modal-backdrop, #btnSaveAll, #btnCancelAll,
       .btn, button, .btn-export, .export-grid, .cal-nav, #aptModal,
       input[type=file], .photo-buttons { display:none !important; }
       body { background:#fff; }
@@ -133,18 +133,6 @@
           </select>
         </div>
       </div>
-      <div style="margin-top:14px; display:flex; gap:10px;">
-        <button class="btn btn-primary btn-sm" id="btnSaveClient" onclick="saveClient()">💾 บันทึกลูกค้า</button>
-        <button class="btn btn-ghost btn-sm" id="btnCancelClient" style="display:none;" onclick="resetClientForm()">ยกเลิกแก้ไข</button>
-      </div>
-      <p id="clientMsg" style="margin-top:10px; font-size:13px;"></p>
-
-      <div style="overflow-x:auto; margin-top:18px;">
-        <table class="data-table" id="clientsTable">
-          <thead><tr><th>ชื่อ</th><th>เบอร์</th><th>สนใจ</th><th>ช่องทาง</th><th>จัดการ</th></tr></thead>
-          <tbody><tr><td colspan="5" style="color:#999;">กำลังโหลด...</td></tr></tbody>
-        </table>
-      </div>
     </div>
 
     <!-- ─── จัดการรายการที่ดิน ─── -->
@@ -177,15 +165,11 @@
         <div class="field-row">
           <div class="field"><label>ราคารวมทุกแปลง (บาท)</label><input type="text" id="lTotalPriceDisplay" readonly style="background:#f3f4f6;"/></div>
           <div class="field"><label>อัตราค่านายหน้า (%)</label><input type="number" id="lCommissionRate" value="3" step="0.1" oninput="recalcCommission()"/></div>
-          <div class="field"><label>ค่าใช้จ่ายการตลาดเพิ่มเติม (บาท) <span style="font-weight:400;color:#888;">(ถ้าต้องการทำการตลาดเพิ่ม)</span></label>
-            <input type="number" id="lMarketingExtra" value="0" oninput="recalcCommission()"/>
-          </div>
           <div class="field"><label>วันที่ชำระ (วันที่เซ็นสัญญาแต่งตั้งนายหน้า)</label><input type="date" id="lContractDate"/></div>
         </div>
         <div class="commission-box">
           <div class="commission-row"><span>ราคารวมทุกแปลง</span><span id="ccTotal">฿0</span></div>
           <div class="commission-row"><span>หักค่านายหน้า (<span id="ccRateLabel">3</span>%)</span><span id="ccCommission">฿0</span></div>
-          <div class="commission-row"><span>หักค่าการตลาดเพิ่มเติม</span><span id="ccExtra">฿0</span></div>
           <div class="commission-row"><span>คงเหลือสุทธิ</span><span id="ccNet">฿0</span></div>
         </div>
       </div>
@@ -193,10 +177,21 @@
       <div class="field field-full" style="margin-top:18px;"><label>📝 หมายเหตุ</label><textarea id="lNote" placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับรายการนี้..."></textarea></div>
 
       <div style="margin-top:14px; display:flex; gap:10px;">
-        <button class="btn btn-primary btn-sm" id="btnSaveListing" onclick="saveListingForm()">💾 บันทึกรายการที่ดิน</button>
-        <button class="btn btn-ghost btn-sm" id="btnCancelListing" style="display:none;" onclick="resetListingForm()">ยกเลิกแก้ไข</button>
+        <button class="btn btn-primary btn-sm" id="btnSaveAll" onclick="saveAll()">💾 บันทึกข้อมูล (ลูกค้า + รายการที่ดิน)</button>
+        <button class="btn btn-ghost btn-sm" id="btnCancelAll" style="display:none;" onclick="resetAllForms()">ยกเลิกแก้ไข</button>
       </div>
-      <p id="listingMsg" style="margin-top:10px; font-size:13px;"></p>
+      <p id="formMsg" style="margin-top:10px; font-size:13px;"></p>
+    </div>
+
+    <!-- ─── รายชื่อลูกค้า ─── -->
+    <div class="card">
+      <h2>👤 รายชื่อลูกค้า</h2>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="clientsTable">
+          <thead><tr><th>ชื่อ</th><th>เบอร์</th><th>สนใจ</th><th>ช่องทาง</th><th>จัดการ</th></tr></thead>
+          <tbody><tr><td colspan="5" style="color:#999;">กำลังโหลด...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ─── ปฏิทินนัดหมาย ─── -->
@@ -440,25 +435,18 @@ function editClient(c) {
   document.getElementById("cPhone").value    = c.phone    || "";
   document.getElementById("cInterest").value = c.interest || "";
   document.getElementById("cChannel").value  = c.channel  || "Facebook";
-  document.getElementById("btnCancelClient").style.display = "inline-block";
+  document.getElementById("btnCancelAll").style.display = "inline-block";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function resetClientForm() {
   ["clientEditId","cName","cPhone","cInterest"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("cChannel").value = "Facebook";
-  document.getElementById("btnCancelClient").style.display = "none";
-  document.getElementById("clientMsg").textContent = "";
 }
 
 async function saveClient() {
   const name = document.getElementById("cName").value.trim();
-  const msgEl = document.getElementById("clientMsg");
-  if (!name) {
-    msgEl.style.color = "#ef4444";
-    msgEl.textContent = "กรุณากรอกชื่อลูกค้า";
-    return;
-  }
+  if (!name) throw new Error("กรุณากรอกชื่อลูกค้า");
   const id = document.getElementById("clientEditId").value || uid();
   const item = {
     id, name,
@@ -466,18 +454,7 @@ async function saveClient() {
     interest: document.getElementById("cInterest").value.trim(),
     channel:  document.getElementById("cChannel").value,
   };
-  const btn = document.getElementById("btnSaveClient");
-  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
-  try {
-    await Storage.saveClient(item);
-    msgEl.style.color = "#1a6b3c";
-    msgEl.textContent = "✅ บันทึกสำเร็จ";
-    resetClientForm();
-  } catch (e) {
-    msgEl.style.color = "#ef4444";
-    msgEl.textContent = "❌ บันทึกไม่สำเร็จ: " + e.message;
-  }
-  btn.disabled = false; btn.textContent = "💾 บันทึกลูกค้า";
+  await Storage.saveClient(item);
 }
 
 async function deleteClientRow(id) {
@@ -602,9 +579,8 @@ function recalcCommission() {
   const plots = getPlotsFromForm();
   const total = plots.reduce((s, p) => s + (p.price || 0), 0);
   const rate = Number(document.getElementById("lCommissionRate").value) || 0;
-  const extra = Number(document.getElementById("lMarketingExtra").value) || 0;
   const commission = total * rate / 100;
-  const net = total - commission; // คงเหลือสุทธิ = ราคารวม - ค่านายหน้า (ไม่หักค่าการตลาดเพิ่มเติม)
+  const net = total - commission;
 
   const fmt = n => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -612,7 +588,6 @@ function recalcCommission() {
   document.getElementById("ccRateLabel").textContent = rate;
   document.getElementById("ccTotal").textContent = "฿" + fmt(total);
   document.getElementById("ccCommission").textContent = "฿" + fmt(commission);
-  document.getElementById("ccExtra").textContent = "฿" + fmt(extra);
   document.getElementById("ccNet").textContent = "฿" + fmt(net);
 }
 
@@ -623,29 +598,21 @@ function resetListingForm() {
   document.getElementById("lType").value = "ที่ดินเปล่า";
   document.getElementById("lStatus").value = "พร้อมขาย";
   document.getElementById("lCommissionRate").value = 3;
-  document.getElementById("lMarketingExtra").value = 0;
   document.getElementById("lContractDate").value = "";
   document.getElementById("plotsContainer").innerHTML = "";
   addPlotBlock();
   recalcCommission();
-  document.getElementById("btnCancelListing").style.display = "none";
-  document.getElementById("listingMsg").textContent = "";
 }
 
 async function saveListingForm() {
   const title = document.getElementById("lTitle").value.trim();
-  const msgEl = document.getElementById("listingMsg");
-  if (!title) {
-    msgEl.style.color = "#ef4444";
-    msgEl.textContent = "กรุณากรอกชื่อประกาศ";
-    return;
-  }
+  if (!title) throw new Error("กรุณากรอกชื่อประกาศ");
+
   const plots = getPlotsFromForm();
   const totalPrice = plots.reduce((s, p) => s + (p.price || 0), 0);
   const firstPlot = plots[0] || {};
   const id = document.getElementById("listingEditId").value || uid();
   const rate = Number(document.getElementById("lCommissionRate").value) || 0;
-  const extra = Number(document.getElementById("lMarketingExtra").value) || 0;
   const commission = totalPrice * rate / 100;
 
   const item = {
@@ -659,24 +626,12 @@ async function saveListingForm() {
     province: firstPlot.province || "",
     commissionRate: rate,
     commissionAmount: commission,
-    marketingExtra: extra,
     netAfterCommission: totalPrice - commission,
     contractDate: document.getElementById("lContractDate").value,
     note: document.getElementById("lNote").value.trim(),
   };
 
-  const btn = document.getElementById("btnSaveListing");
-  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
-  try {
-    await Storage.saveListing(item);
-    msgEl.style.color = "#1a6b3c";
-    msgEl.textContent = "✅ บันทึกรายการที่ดินสำเร็จ";
-    resetListingForm();
-  } catch (e) {
-    msgEl.style.color = "#ef4444";
-    msgEl.textContent = "❌ บันทึกไม่สำเร็จ: " + e.message;
-  }
-  btn.disabled = false; btn.textContent = "💾 บันทึกรายการที่ดิน";
+  await Storage.saveListing(item);
 }
 
 function editListing(id) {
@@ -688,7 +643,6 @@ function editListing(id) {
   document.getElementById("lStatus").value = l.status || "พร้อมขาย";
   document.getElementById("lDesc").value   = l.description || "";
   document.getElementById("lCommissionRate").value = l.commissionRate ?? 3;
-  document.getElementById("lMarketingExtra").value = l.marketingExtra ?? 0;
   document.getElementById("lContractDate").value   = l.contractDate || "";
   document.getElementById("lNote").value   = l.note || "";
 
@@ -696,8 +650,42 @@ function editListing(id) {
   (l.plots && l.plots.length ? l.plots : [{}]).forEach(p => addPlotBlock(p));
   recalcCommission();
 
-  document.getElementById("btnCancelListing").style.display = "inline-block";
+  document.getElementById("btnCancelAll").style.display = "inline-block";
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ─── บันทึก/ยกเลิก รวม (ลูกค้า + รายการที่ดิน) ─────────────────────────────────
+async function saveAll() {
+  const msgEl = document.getElementById("formMsg");
+  const btn = document.getElementById("btnSaveAll");
+  const cName = document.getElementById("cName").value.trim();
+  const lTitle = document.getElementById("lTitle").value.trim();
+
+  if (!cName && !lTitle) {
+    msgEl.style.color = "#ef4444";
+    msgEl.textContent = "กรุณากรอกชื่อลูกค้า และ/หรือ ชื่อประกาศที่ดินอย่างน้อย 1 อย่าง";
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+  msgEl.textContent = "";
+  try {
+    if (cName) await saveClient();
+    if (lTitle) await saveListingForm();
+    msgEl.style.color = "#1a6b3c";
+    msgEl.textContent = "✅ บันทึกข้อมูลสำเร็จ";
+    resetAllForms();
+  } catch (e) {
+    msgEl.style.color = "#ef4444";
+    msgEl.textContent = "❌ บันทึกไม่สำเร็จ: " + e.message;
+  }
+  btn.disabled = false; btn.textContent = "💾 บันทึกข้อมูล (ลูกค้า + รายการที่ดิน)";
+}
+
+function resetAllForms() {
+  resetClientForm();
+  resetListingForm();
+  document.getElementById("btnCancelAll").style.display = "none";
 }
 
 async function deleteListingRow(id) {
