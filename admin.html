@@ -41,6 +41,7 @@
     .btn-csv  { background:#e8f5e9; color:#1a6b3c; }
     .btn-xlsx { background:#e3f2fd; color:#1565c0; }
     .btn-all  { background:#fce4ec; color:#880e4f; }
+    .btn-import-file { background:#fff7ed; color:#9a3412; }
     .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
 
     /* ─── Listing form / plots ─── */
@@ -260,6 +261,35 @@
         <button class="btn-export btn-all" onclick="exportAllXLSX()">⬇ Excel รวม (2 sheet)</button>
       </div>
       <p id="exportMsg" style="margin-top:10px; font-size:13px; color:#666;"></p>
+    </div>
+
+    <!-- ─── Import / นำเข้าข้อมูล ─── -->
+    <div class="card">
+      <h2>📥 Import / นำเข้าข้อมูล</h2>
+      <p style="color:#666; font-size:13.5px; margin-bottom:14px;">
+        นำเข้าข้อมูลจากไฟล์ CSV หรือ Excel (.xlsx) — แถวแรกของไฟล์ต้องเป็นหัวคอลัมน์ (header)
+      </p>
+
+      <p style="font-weight:700; font-size:13.5px; margin-bottom:6px;">👤 ลูกค้า (clients)</p>
+      <p style="color:#999; font-size:12px; margin-bottom:8px;">คอลัมน์ที่รองรับ: name, phone, interest, channel</p>
+      <div class="export-grid" style="margin-bottom:18px;">
+        <label class="btn-export btn-import-file" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+          ⬆ เลือกไฟล์ลูกค้า
+          <input type="file" accept=".csv,.xlsx,.xls" style="display:none;" onchange="importClients(this.files[0])"/>
+        </label>
+      </div>
+
+      <p style="font-weight:700; font-size:13.5px; margin-bottom:6px;">🏠 ประกาศ (listings)</p>
+      <p style="color:#999; font-size:12px; margin-bottom:8px;">คอลัมน์ที่รองรับ: title, type, status, description, price, district, province, commissionRate, marketingExtra, contractDate, note <br/>
+      ข้อมูลแปลง/โฉนด (ไม่รวมรูปภาพ): plot1_deed, plot1_district, plot1_province, plot1_rai, plot1_ngan, plot1_wa, plot1_coord, plot1_price, plot2_deed, plot2_... (เพิ่มแปลงถัดไปได้โดยเปลี่ยนเลข 1→2→3...) <br/>
+      <span style="color:#c2410c;">รูปโฉนดและรูปโปรโมท ต้องอัปโหลดเองภายหลังในฟอร์มแก้ไข</span></p>
+      <div class="export-grid">
+        <label class="btn-export btn-import-file" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+          ⬆ เลือกไฟล์ประกาศ
+          <input type="file" accept=".csv,.xlsx,.xls" style="display:none;" onchange="importListings(this.files[0])"/>
+        </label>
+      </div>
+      <p id="importMsg" style="margin-top:10px; font-size:13px; color:#666;"></p>
     </div>
 
     <!-- ─── รายการประกาศทั้งหมด ─── -->
@@ -1088,6 +1118,156 @@ function exportAllXLSX() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allClientsAdmin),  "Clients");
   XLSX.writeFile(wb, `backup_all_${dateStamp()}.xlsx`);
   setExportMsg("✅ Export รวมสำเร็จ");
+}
+
+// ─── Import helpers ────────────────────────────────────────────────────────────
+function setImportMsg(text, isError) {
+  const el = document.getElementById("importMsg");
+  el.style.color = isError ? "#ef4444" : "#1a6b3c";
+  el.textContent = text;
+}
+
+function readFileAsRows(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: "binary" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        resolve(rows);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+    reader.readAsBinaryString(file);
+  });
+}
+
+async function importClients(file) {
+  if (!file) return;
+  document.getElementById("importMsg").textContent = "";
+  try {
+    const rows = await readFileAsRows(file);
+    if (!rows.length) { setImportMsg("⚠ ไม่พบข้อมูลในไฟล์", true); return; }
+
+    setImportMsg(`⏳ กำลังนำเข้า 0/${rows.length}...`);
+    let ok = 0, fail = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const name = String(r.name || r["ชื่อ"] || r["ชื่อลูกค้า"] || "").trim();
+      if (!name) { fail++; continue; }
+      const item = {
+        id: r.id ? String(r.id) : uid(),
+        name,
+        phone:    String(r.phone || r["เบอร์"] || r["เบอร์โทร"] || "").trim(),
+        interest: String(r.interest || r["สนใจ"] || r["สนใจรายการ"] || "").trim(),
+        channel:  String(r.channel || r["ช่องทาง"] || "Facebook").trim(),
+      };
+      try { await Storage.saveClient(item); ok++; }
+      catch { fail++; }
+      setImportMsg(`⏳ กำลังนำเข้า ${i+1}/${rows.length}...`);
+    }
+    setImportMsg(`✅ นำเข้าลูกค้าสำเร็จ ${ok} รายการ${fail ? ` (ข้าม ${fail} แถวที่ข้อมูลไม่ครบ)` : ""}`);
+  } catch (e) {
+    setImportMsg("❌ นำเข้าไม่สำเร็จ: " + e.message, true);
+  }
+}
+
+// แกะข้อมูลแปลง/โฉนดจากแถวข้อมูล รองรับคอลัมน์แบบ plot1_deed, plot1_district, plot1_rai, plot1_ngan, plot1_wa, plot1_coord, plot1_price, plot2_... (รูปภาพต้องอัปโหลดเองทีหลังในฟอร์มแก้ไข)
+function extractPlotsFromRow(row) {
+  const groups = {};
+  Object.keys(row).forEach(key => {
+    const m = key.match(/^plot(\d+)_(deed|district|province|rai|ngan|wa|coord|price)$/i);
+    if (m) {
+      const idx = m[1], field = m[2].toLowerCase();
+      groups[idx] = groups[idx] || {};
+      groups[idx][field] = row[key];
+    }
+  });
+  let plots = Object.keys(groups).sort((a,b) => Number(a)-Number(b)).map(idx => {
+    const p = groups[idx];
+    return {
+      deed:     String(p.deed     || "").trim(),
+      district: String(p.district || "").trim(),
+      province: String(p.province || "").trim(),
+      rai:  Number(p.rai)  || 0,
+      ngan: Number(p.ngan) || 0,
+      wa:   Number(p.wa)   || 0,
+      coord: String(p.coord || "").trim(),
+      price: Number(p.price) || 0,
+      imgFront: "", imgBack: "", promoImages: [],
+    };
+  }).filter(p => p.deed || p.district || p.province || p.price || p.rai || p.ngan || p.wa || p.coord);
+
+  // ไม่มีคอลัมน์ plotN_ แต่มีคอลัมน์เดี่ยว เช่น deed/district/... ให้ถือเป็นแปลงเดียว
+  if (!plots.length) {
+    const deed = row.deed || row["หมายเลขโฉนด"] || row["โฉนด"];
+    const district = row.district || row["อำเภอ"];
+    const province = row.province || row["จังหวัด"];
+    if (deed || district || province) {
+      plots.push({
+        deed:     String(deed || "").trim(),
+        district: String(district || "").trim(),
+        province: String(province || "").trim(),
+        rai:  Number(row.rai  || row["ไร่"])  || 0,
+        ngan: Number(row.ngan || row["งาน"])  || 0,
+        wa:   Number(row.wa   || row["ตรว"] || row["ตร.ว."]) || 0,
+        coord: String(row.coord || row["พิกัด"] || "").trim(),
+        price: Number(row.price || row["ราคา"]) || 0,
+        imgFront: "", imgBack: "", promoImages: [],
+      });
+    }
+  }
+  return plots;
+}
+
+async function importListings(file) {
+  if (!file) return;
+  document.getElementById("importMsg").textContent = "";
+  try {
+    const rows = await readFileAsRows(file);
+    if (!rows.length) { setImportMsg("⚠ ไม่พบข้อมูลในไฟล์", true); return; }
+
+    setImportMsg(`⏳ กำลังนำเข้า 0/${rows.length}...`);
+    let ok = 0, fail = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const title = String(r.title || r["ชื่อ"] || r["ชื่อประกาศ"] || "").trim();
+      if (!title) { fail++; continue; }
+      const plots = extractPlotsFromRow(r);
+      const price = plots.length
+        ? plots.reduce((s, p) => s + (p.price || 0), 0)
+        : (Number(r.price || r["ราคา"] || 0) || 0);
+      const firstPlot = plots[0] || {};
+      const rate  = Number(r.commissionRate ?? r["อัตราค่านายหน้า"] ?? 3) || 0;
+      const extra = Number(r.marketingExtra ?? r["ค่าการตลาดเพิ่มเติม"] ?? 0) || 0;
+      const item = {
+        id: r.id ? String(r.id) : uid(),
+        title,
+        type:   String(r.type || r["ประเภท"] || "ที่ดินเปล่า").trim(),
+        status: String(r.status || r["สถานะ"] || "พร้อมขาย").trim(),
+        description: String(r.description || r["รายละเอียด"] || "").trim(),
+        plots,
+        price,
+        district: firstPlot.district || String(r.district || r["อำเภอ"] || "").trim(),
+        province: firstPlot.province || String(r.province || r["จังหวัด"] || "").trim(),
+        commissionRate: rate,
+        commissionAmount: price * rate / 100,
+        marketingExtra: extra,
+        netAfterCommission: price - (price * rate / 100),
+        contractDate: String(r.contractDate || r["วันที่ชำระ"] || "").trim(),
+        note: String(r.note || r["หมายเหตุ"] || "").trim(),
+      };
+      try { await Storage.saveListing(item); ok++; }
+      catch { fail++; }
+      setImportMsg(`⏳ กำลังนำเข้า ${i+1}/${rows.length}...`);
+    }
+    setImportMsg(`✅ นำเข้ารายการที่ดินสำเร็จ ${ok} รายการ${fail ? ` (ข้าม ${fail} แถวที่ข้อมูลไม่ครบ)` : ""} — รูปภาพยังต้องอัปโหลดเองภายหลังในฟอร์มแก้ไข`);
+  } catch (e) {
+    setImportMsg("❌ นำเข้าไม่สำเร็จ: " + e.message, true);
+  }
 }
 </script>
 </body>
