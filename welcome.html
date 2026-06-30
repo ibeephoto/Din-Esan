@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ดินอีสาน — ฝากขายบ้าน & ที่ดิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #1a6b3c;
+    --green-dark: #0d4f2b;
+    --green-light: #dcfce7;
+  }
+  body {
+    font-family: 'Noto Sans Thai', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    padding: 24px;
+  }
+  .splash {
+    background: #fff;
+    border-radius: 24px;
+    padding: 48px 36px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    animation: fadeUp .5s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .logo-img {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    object-fit: contain;
+    margin: 0 auto 20px;
+    display: block;
+    box-shadow: 0 6px 18px rgba(26,107,60,.18);
+  }
+  .logo-fallback {
+    width: 88px; height: 88px;
+    border-radius: 20px;
+    background: var(--green);
+    margin: 0 auto 20px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  h1 { font-size: 26px; font-weight: 800; color: #111; margin-bottom: 6px; }
+  .sub { font-size: 15px; color: #666; margin-bottom: 28px; }
+  .tagline {
+    font-size: 13.5px;
+    color: var(--green);
+    background: var(--green-light);
+    border-radius: 999px;
+    padding: 6px 16px;
+    display: inline-block;
+    margin-bottom: 28px;
+    font-weight: 600;
+  }
+  .btn-enter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 14px;
+    background: var(--green);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .15s, background .15s;
+  }
+  .btn-enter:hover { background: var(--green-dark); transform: translateY(-2px); }
+  .btn-enter:active { transform: translateY(0); }
+  .footer-note {
+    margin-top: 22px;
+    font-size: 12px;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+
+  <div class="splash">
+    <img src="img/logo.png" alt="ดินอีสาน DIN E SAN" class="logo-img"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+    <div class="logo-fallback">🏡</div>
+
+    <h1>ดินอีสาน</h1>
+    <p class="sub">DIN E SAN — ฝากขายบ้าน &amp; ที่ดิน</p>
+    <span class="tagline">🌾 ที่ดิน บ้าน อสังหาริมทรัพย์</span>
+
+    <button class="btn-enter" onclick="window.location.href='index.html'">
+      เข้าสู่เว็บไซต์ →
+    </button>
+
+    <p class="footer-note">© ดินอีสาน — DIN E SAN</p>
+  </div>
+
+</body>
+</html>
