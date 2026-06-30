@@ -64,6 +64,19 @@
 
     .success-msg { color: #2e7d32; font-size: .9rem; margin-top: .75rem; text-align: center; }
 
+    /* Export buttons */
+    .export-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem;
+    }
+    .btn-export {
+      padding: .65rem 1rem; border: none; border-radius: 8px; cursor: pointer;
+      font-size: .9rem; font-weight: 500; transition: opacity .2s; text-align: center;
+    }
+    .btn-export:hover { opacity: .85; }
+    .btn-csv  { background: #e8f5e9; color: #2e7d32; }
+    .btn-xlsx { background: #e3f2fd; color: #1565c0; }
+    .btn-all  { background: #fce4ec; color: #880e4f; }
+
     /* Listings table */
     .listings-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
     .listings-table th { background: #f5f5f5; padding: .6rem .8rem; text-align: left; }
@@ -78,6 +91,8 @@
     .tag-sale { background: #e8f5e9; color: #2e7d32; padding: .15rem .5rem; border-radius: 4px; }
     .tag-rent { background: #e3f2fd; color: #1565c0; padding: .15rem .5rem; border-radius: 4px; }
   </style>
+  <!-- SheetJS สำหรับ Export XLSX -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -152,6 +167,32 @@
       <p id="form-msg" style="margin-top:.75rem; text-align:center; font-size:.9rem;"></p>
     </div>
 
+    <!-- Export / สำรองข้อมูล -->
+    <div class="card">
+      <h2>💾 Export / สำรองข้อมูล</h2>
+      <p style="color:#666; font-size:.9rem; margin-bottom:1rem;">เลือก collection และรูปแบบไฟล์ที่ต้องการ</p>
+
+      <p style="font-weight:600; margin-bottom:.5rem; font-size:.9rem;">🏠 ประกาศ (listings)</p>
+      <div class="export-grid" style="margin-bottom:1.25rem;">
+        <button class="btn-export btn-csv"  id="exp-listings-csv">⬇ CSV</button>
+        <button class="btn-export btn-xlsx" id="exp-listings-xlsx">⬇ Excel (.xlsx)</button>
+      </div>
+
+      <p style="font-weight:600; margin-bottom:.5rem; font-size:.9rem;">👤 ลูกค้า / ผู้ใช้ (users)</p>
+      <div class="export-grid" style="margin-bottom:1.25rem;">
+        <button class="btn-export btn-csv"  id="exp-users-csv">⬇ CSV</button>
+        <button class="btn-export btn-xlsx" id="exp-users-xlsx">⬇ Excel (.xlsx)</button>
+      </div>
+
+      <p style="font-weight:600; margin-bottom:.5rem; font-size:.9rem;">📦 ทั้งหมดในไฟล์เดียว</p>
+      <div class="export-grid">
+        <button class="btn-export btn-all" id="exp-all-csv">⬇ CSV (2 ไฟล์)</button>
+        <button class="btn-export btn-all" id="exp-all-xlsx">⬇ Excel รวม (2 sheet)</button>
+      </div>
+
+      <p id="export-msg" style="margin-top:.75rem; font-size:.85rem; color:#666;"></p>
+    </div>
+
     <!-- รายการประกาศทั้งหมด -->
     <div class="card">
       <h2>📋 ประกาศทั้งหมด</h2>
@@ -167,6 +208,7 @@
   import { login, logout, watchAuthState } from "./js/auth.js";
   import { addListing, updateListing, deleteListing } from "./js/admin.js";
   import { getAllListings } from "./js/listings.js";
+  import { exportListings, exportUsers, exportAll } from "./js/export.js";
 
   // ===== Auth state =====
   watchAuthState(user => {
@@ -303,6 +345,26 @@
     document.getElementById("form-msg").textContent = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // ===== Export =====
+  function setExportMsg(text) {
+    const el = document.getElementById("export-msg");
+    el.textContent = text;
+    setTimeout(() => { el.textContent = ""; }, 3000);
+  }
+
+  async function handleExport(fn, label) {
+    setExportMsg(`⏳ กำลัง export ${label}...`);
+    await fn();
+    setExportMsg(`✅ Export ${label} สำเร็จ`);
+  }
+
+  document.getElementById("exp-listings-csv") .addEventListener("click", () => handleExport(() => exportListings("csv"),  "listings CSV"));
+  document.getElementById("exp-listings-xlsx").addEventListener("click", () => handleExport(() => exportListings("xlsx"), "listings Excel"));
+  document.getElementById("exp-users-csv")    .addEventListener("click", () => handleExport(() => exportUsers("csv"),    "users CSV"));
+  document.getElementById("exp-users-xlsx")   .addEventListener("click", () => handleExport(() => exportUsers("xlsx"),   "users Excel"));
+  document.getElementById("exp-all-csv")      .addEventListener("click", () => handleExport(() => exportAll("csv"),      "ทั้งหมด CSV"));
+  document.getElementById("exp-all-xlsx")     .addEventListener("click", () => handleExport(() => exportAll("xlsx"),     "ทั้งหมด Excel"));
 
   // ===== Delete =====
   window.confirmDelete = async (id, title) => {
