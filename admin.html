@@ -42,6 +42,48 @@
     .btn-xlsx { background:#e3f2fd; color:#1565c0; }
     .btn-all  { background:#fce4ec; color:#880e4f; }
     .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+
+    /* ─── Listing form / plots ─── */
+    .plot-block {
+      border:1px solid #e5e7eb; border-radius:14px; padding:16px; margin-bottom:14px; background:#fafafa; position:relative;
+    }
+    .plot-block-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .plot-block-head b { font-size:13.5px; color:#444; }
+    .btn-remove-plot {
+      background:#fee2e2; color:#b91c1c; border:none; border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer; font-weight:700;
+    }
+    .plot-area-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    @media (max-width:600px){ .plot-area-row{ grid-template-columns:1fr 1fr 1fr; } }
+    .photo-field { display:flex; flex-direction:column; gap:6px; }
+    .photo-buttons { display:flex; gap:8px; flex-wrap:wrap; }
+    .photo-buttons label {
+      display:inline-flex; align-items:center; gap:4px; background:#eef2ff; color:#3730a3;
+      padding:7px 10px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; margin:0;
+    }
+    .photo-buttons input[type=file]{ display:none; }
+    .photo-preview { width:100%; max-width:160px; border-radius:10px; border:1px solid #ddd; margin-top:4px; display:none; }
+    .btn-add-plot {
+      background:#e0f2fe; color:#075985; border:none; border-radius:10px; padding:10px 14px; font-size:13.5px; font-weight:700; cursor:pointer;
+    }
+    .commission-box { background:#f8fafc; border-radius:14px; padding:16px; margin-top:6px; }
+    .commission-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13.5px; border-bottom:1px dashed #e5e7eb; }
+    .commission-row:last-child{ border-bottom:none; font-weight:800; font-size:15px; color:#1a6b3c; }
+    .btn-gcal {
+      background:#fff3e0; color:#e65100; border:none; border-radius:8px; padding:5px 9px; font-size:12px; font-weight:700; cursor:pointer;
+    }
+    .btn-print {
+      background:#ede9fe; color:#5b21b6; border:none; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:700; cursor:pointer;
+    }
+
+    /* ─── Print ─── */
+    @media print {
+      #loginSection, .admin-top, .modal-backdrop, #btnSaveListing, #btnCancelListing,
+      .btn, button, .btn-export, .export-grid, .cal-nav, #aptModal,
+      input[type=file], .photo-buttons { display:none !important; }
+      body { background:#fff; }
+      .card { box-shadow:none; border:1px solid #ddd; break-inside:avoid; }
+      .admin-shell { max-width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -72,6 +114,7 @@
       <h1>📋 Admin Panel — ดินอีสาน</h1>
       <div style="display:flex; gap:10px;">
         <a href="index.html" class="btn btn-ghost btn-sm">🏠 หน้าหลัก</a>
+        <button class="btn-print" onclick="window.print()">🖨️ ปริ้นท์หน้านี้</button>
         <button class="btn btn-ghost btn-sm" onclick="adminLogout()">🚪 ออกจากระบบ</button>
       </div>
     </div>
@@ -162,16 +205,65 @@
       <p id="exportMsg" style="margin-top:10px; font-size:13px; color:#666;"></p>
     </div>
 
-    <!-- ─── รายการประกาศ (ไปจัดการที่หน้าหลักได้) ─── -->
+    <!-- ─── จัดการรายการที่ดิน ─── -->
+    <div class="card">
+      <h2>🏞️ จัดการรายการที่ดิน (เพิ่ม/แก้ไข)</h2>
+      <input type="hidden" id="listingEditId"/>
+
+      <div class="field-row">
+        <div class="field field-full"><label>ชื่อประกาศ</label><input type="text" id="lTitle" placeholder="เช่น ที่ดินเปล่า ติดถนนใหญ่ อ.เมือง"/></div>
+        <div class="field"><label>ประเภท</label>
+          <select id="lType">
+            <option>ที่ดินเปล่า</option><option>ที่ดินพร้อมสิ่งปลูกสร้าง</option><option>ที่ดินเกษตร</option><option>อื่นๆ</option>
+          </select>
+        </div>
+        <div class="field"><label>สถานะ</label>
+          <select id="lStatus"><option>พร้อมขาย</option><option>จองแล้ว</option><option>ขายแล้ว</option><option>ระงับชั่วคราว</option></select>
+        </div>
+        <div class="field field-full"><label>รายละเอียดเพิ่มเติม</label><textarea id="lDesc" placeholder="รายละเอียดประกาศ..."></textarea></div>
+      </div>
+
+      <div style="margin-top:18px; display:flex; align-items:center; justify-content:space-between;">
+        <h2 style="margin:0;">📜 ข้อมูลแปลง / โฉนด</h2>
+        <button type="button" class="btn-add-plot" onclick="addPlotBlock()">＋ เพิ่มแปลง / คอลัมน์</button>
+      </div>
+      <p style="color:#888; font-size:12.5px; margin:6px 0 12px;">แต่ละแปลงมี: หมายเลขโฉนด, อำเภอ, จังหวัด, เนื้อที่ (ไร่-งาน-ตร.ว.), พิกัด, ราคา และรูปโฉนดหน้า-หลัง — กดปุ่มด้านบนเพื่อเพิ่มแปลง/คอลัมน์ได้ไม่จำกัด</p>
+      <div id="plotsContainer"></div>
+
+      <div style="margin-top:20px;">
+        <h2>💰 ค่านายหน้าการตลาด</h2>
+        <div class="field-row">
+          <div class="field"><label>ราคารวมทุกแปลง (บาท)</label><input type="text" id="lTotalPriceDisplay" readonly style="background:#f3f4f6;"/></div>
+          <div class="field"><label>อัตราค่านายหน้า (%)</label><input type="number" id="lCommissionRate" value="3" step="0.1" oninput="recalcCommission()"/></div>
+          <div class="field"><label>ค่าใช้จ่ายการตลาดเพิ่มเติม (บาท) <span style="font-weight:400;color:#888;">(ถ้าต้องการทำการตลาดเพิ่ม)</span></label>
+            <input type="number" id="lMarketingExtra" value="0" oninput="recalcCommission()"/>
+          </div>
+          <div class="field"><label>วันที่ชำระ (วันที่เซ็นสัญญาแต่งตั้งนายหน้า)</label><input type="date" id="lContractDate"/></div>
+        </div>
+        <div class="commission-box">
+          <div class="commission-row"><span>ราคารวมทุกแปลง</span><span id="ccTotal">฿0</span></div>
+          <div class="commission-row"><span>หักค่านายหน้า (<span id="ccRateLabel">3</span>%)</span><span id="ccCommission">฿0</span></div>
+          <div class="commission-row"><span>หักค่าการตลาดเพิ่มเติม</span><span id="ccExtra">฿0</span></div>
+          <div class="commission-row"><span>คงเหลือสุทธิ</span><span id="ccNet">฿0</span></div>
+        </div>
+      </div>
+
+      <div class="field field-full" style="margin-top:18px;"><label>📝 หมายเหตุ</label><textarea id="lNote" placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับรายการนี้..."></textarea></div>
+
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" id="btnSaveListing" onclick="saveListingForm()">💾 บันทึกรายการที่ดิน</button>
+        <button class="btn btn-ghost btn-sm" id="btnCancelListing" style="display:none;" onclick="resetListingForm()">ยกเลิกแก้ไข</button>
+      </div>
+      <p id="listingMsg" style="margin-top:10px; font-size:13px;"></p>
+    </div>
+
+    <!-- ─── รายการประกาศทั้งหมด ─── -->
     <div class="card">
       <h2>🏠 ประกาศทั้งหมด</h2>
-      <p style="font-size:13.5px; color:#666; margin-bottom:14px;">
-        เพิ่ม/แก้ไข/ลบประกาศได้จากหน้าหลัก (กดปุ่ม "➕ เพิ่มรายการ" หลัง login) — ตารางนี้แสดงไว้ดูอย่างเดียว
-      </p>
       <div style="overflow-x:auto;">
         <table class="data-table" id="listingsTable">
-          <thead><tr><th>ชื่อ</th><th>ประเภท</th><th>ราคา</th><th>อำเภอ/จังหวัด</th></tr></thead>
-          <tbody><tr><td colspan="4" style="color:#999;">กำลังโหลด...</td></tr></tbody>
+          <thead><tr><th>ชื่อ</th><th>ประเภท</th><th>ราคารวม</th><th>อำเภอ/จังหวัด</th><th>จัดการ</th></tr></thead>
+          <tbody><tr><td colspan="5" style="color:#999;">กำลังโหลด...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -245,6 +337,11 @@ let unsubClientsAdmin = null;
 let unsubListingsAdmin = null;
 let unsubAppointmentsAdmin = null;
 let calView = new Date(); // เดือนที่กำลังแสดงในปฏิทิน
+
+document.addEventListener("DOMContentLoaded", () => {
+  addPlotBlock();
+  recalcCommission();
+});
 
 // ─── Escape HTML (กัน XSS เวลา render ตาราง) ──────────────────────────────────
 function escHtml(s) {
@@ -395,21 +492,246 @@ async function deleteClientRow(id) {
   }
 }
 
-// ─── Listings table (read-only view) ──────────────────────────────────────────
+// ─── Listings: plots / fields config ──────────────────────────────────────────
+let plotCounter = 0;
+
+function plotBlockHtml(p = {}) {
+  const n = ++plotCounter;
+  return `
+  <div class="plot-block" id="plot-${n}" data-plot="${n}">
+    <div class="plot-block-head">
+      <b>แปลงที่ / โฉนดที่ #${n}</b>
+      <button type="button" class="btn-remove-plot" onclick="removePlotBlock(${n})">🗑 ลบแปลงนี้</button>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>หมายเลขโฉนด</label><input type="text" class="p-deed" value="${escHtml(p.deed||'')}" placeholder="เช่น 12345"/></div>
+      <div class="field"><label>อำเภอ</label><input type="text" class="p-district" value="${escHtml(p.district||'')}" placeholder="อำเภอ"/></div>
+      <div class="field"><label>จังหวัด</label><input type="text" class="p-province" value="${escHtml(p.province||'')}" placeholder="จังหวัด"/></div>
+    </div>
+    <div class="field" style="margin-top:10px;"><label>เนื้อที่</label>
+      <div class="plot-area-row">
+        <input type="number" class="p-rai" value="${p.rai??''}" placeholder="ไร่"/>
+        <input type="number" class="p-ngan" value="${p.ngan??''}" placeholder="งาน"/>
+        <input type="number" class="p-wa" value="${p.wa??''}" placeholder="ตร.ว."/>
+      </div>
+    </div>
+    <div class="field-row" style="margin-top:10px;">
+      <div class="field"><label>พิกัด (Lat,Lng)</label><input type="text" class="p-coord" value="${escHtml(p.coord||'')}" placeholder="เช่น 15.7920, 104.1450" oninput="recalcCommission()"/></div>
+      <div class="field"><label>ราคา (บาท)</label><input type="number" class="p-price" value="${p.price??''}" placeholder="0" oninput="recalcCommission()"/></div>
+    </div>
+    <div class="field-row" style="margin-top:10px;">
+      <div class="photo-field">
+        <label>รูปโฉนดหน้า</label>
+        <div class="photo-buttons">
+          <label>📁 เลือกไฟล์<input type="file" accept="image/*" class="p-imgfront-file" onchange="handlePlotPhoto(this,${n},'front')"/></label>
+          <label>📷 ถ่ายภาพ<input type="file" accept="image/*" capture="environment" class="p-imgfront-cam" onchange="handlePlotPhoto(this,${n},'front')"/></label>
+        </div>
+        <img class="photo-preview p-imgfront-preview" src="${p.imgFront||''}" style="${p.imgFront?'display:block;':''}"/>
+        <input type="hidden" class="p-imgfront" value="${p.imgFront||''}"/>
+      </div>
+      <div class="photo-field">
+        <label>รูปโฉนดหลัง</label>
+        <div class="photo-buttons">
+          <label>📁 เลือกไฟล์<input type="file" accept="image/*" class="p-imgback-file" onchange="handlePlotPhoto(this,${n},'back')"/></label>
+          <label>📷 ถ่ายภาพ<input type="file" accept="image/*" capture="environment" class="p-imgback-cam" onchange="handlePlotPhoto(this,${n},'back')"/></label>
+        </div>
+        <img class="photo-preview p-imgback-preview" src="${p.imgBack||''}" style="${p.imgBack?'display:block;':''}"/>
+        <input type="hidden" class="p-imgback" value="${p.imgBack||''}"/>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addPlotBlock(p) {
+  document.getElementById("plotsContainer").insertAdjacentHTML("beforeend", plotBlockHtml(p || {}));
+}
+
+function removePlotBlock(n) {
+  const el = document.getElementById("plot-" + n);
+  if (el) el.remove();
+  recalcCommission();
+}
+
+function handlePlotPhoto(input, n, side) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const block = document.getElementById("plot-" + n);
+    block.querySelector(side === "front" ? ".p-imgfront" : ".p-imgback").value = e.target.result;
+    const preview = block.querySelector(side === "front" ? ".p-imgfront-preview" : ".p-imgback-preview");
+    preview.src = e.target.result;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+function getPlotsFromForm() {
+  return Array.from(document.querySelectorAll("#plotsContainer .plot-block")).map(block => ({
+    deed:     block.querySelector(".p-deed").value.trim(),
+    district: block.querySelector(".p-district").value.trim(),
+    province: block.querySelector(".p-province").value.trim(),
+    rai:  Number(block.querySelector(".p-rai").value)  || 0,
+    ngan: Number(block.querySelector(".p-ngan").value) || 0,
+    wa:   Number(block.querySelector(".p-wa").value)   || 0,
+    coord: block.querySelector(".p-coord").value.trim(),
+    price: Number(block.querySelector(".p-price").value) || 0,
+    imgFront: block.querySelector(".p-imgfront").value,
+    imgBack:  block.querySelector(".p-imgback").value,
+  }));
+}
+
+// ─── ค่านายหน้าการตลาด ────────────────────────────────────────────────────────
+function recalcCommission() {
+  const plots = getPlotsFromForm();
+  const total = plots.reduce((s, p) => s + (p.price || 0), 0);
+  const rate = Number(document.getElementById("lCommissionRate").value) || 0;
+  const extra = Number(document.getElementById("lMarketingExtra").value) || 0;
+  const commission = total * rate / 100;
+  const net = total - commission - extra;
+
+  document.getElementById("lTotalPriceDisplay").value = total.toLocaleString("th-TH");
+  document.getElementById("ccRateLabel").textContent = rate;
+  document.getElementById("ccTotal").textContent = "฿" + total.toLocaleString("th-TH");
+  document.getElementById("ccCommission").textContent = "฿" + commission.toLocaleString("th-TH", {maximumFractionDigits:2});
+  document.getElementById("ccExtra").textContent = "฿" + extra.toLocaleString("th-TH");
+  document.getElementById("ccNet").textContent = "฿" + net.toLocaleString("th-TH", {maximumFractionDigits:2});
+}
+
+// ─── Listings CRUD ────────────────────────────────────────────────────────────
+function resetListingForm() {
+  document.getElementById("listingEditId").value = "";
+  ["lTitle","lDesc","lNote"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("lType").value = "ที่ดินเปล่า";
+  document.getElementById("lStatus").value = "พร้อมขาย";
+  document.getElementById("lCommissionRate").value = 3;
+  document.getElementById("lMarketingExtra").value = 0;
+  document.getElementById("lContractDate").value = "";
+  document.getElementById("plotsContainer").innerHTML = "";
+  addPlotBlock();
+  recalcCommission();
+  document.getElementById("btnCancelListing").style.display = "none";
+  document.getElementById("listingMsg").textContent = "";
+}
+
+async function saveListingForm() {
+  const title = document.getElementById("lTitle").value.trim();
+  const msgEl = document.getElementById("listingMsg");
+  if (!title) {
+    msgEl.style.color = "#ef4444";
+    msgEl.textContent = "กรุณากรอกชื่อประกาศ";
+    return;
+  }
+  const plots = getPlotsFromForm();
+  const totalPrice = plots.reduce((s, p) => s + (p.price || 0), 0);
+  const firstPlot = plots[0] || {};
+  const id = document.getElementById("listingEditId").value || uid();
+  const rate = Number(document.getElementById("lCommissionRate").value) || 0;
+  const extra = Number(document.getElementById("lMarketingExtra").value) || 0;
+  const commission = totalPrice * rate / 100;
+
+  const item = {
+    id, title,
+    type:   document.getElementById("lType").value,
+    status: document.getElementById("lStatus").value,
+    description: document.getElementById("lDesc").value.trim(),
+    plots,
+    price: totalPrice,
+    district: firstPlot.district || "",
+    province: firstPlot.province || "",
+    commissionRate: rate,
+    commissionAmount: commission,
+    marketingExtra: extra,
+    netAfterCommission: totalPrice - commission - extra,
+    contractDate: document.getElementById("lContractDate").value,
+    note: document.getElementById("lNote").value.trim(),
+  };
+
+  const btn = document.getElementById("btnSaveListing");
+  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+  try {
+    await Storage.saveListing(item);
+    msgEl.style.color = "#1a6b3c";
+    msgEl.textContent = "✅ บันทึกรายการที่ดินสำเร็จ";
+    resetListingForm();
+  } catch (e) {
+    msgEl.style.color = "#ef4444";
+    msgEl.textContent = "❌ บันทึกไม่สำเร็จ: " + e.message;
+  }
+  btn.disabled = false; btn.textContent = "💾 บันทึกรายการที่ดิน";
+}
+
+function editListing(id) {
+  const l = allListingsAdmin.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById("listingEditId").value = l.id;
+  document.getElementById("lTitle").value  = l.title || "";
+  document.getElementById("lType").value   = l.type || "ที่ดินเปล่า";
+  document.getElementById("lStatus").value = l.status || "พร้อมขาย";
+  document.getElementById("lDesc").value   = l.description || "";
+  document.getElementById("lCommissionRate").value = l.commissionRate ?? 3;
+  document.getElementById("lMarketingExtra").value = l.marketingExtra ?? 0;
+  document.getElementById("lContractDate").value   = l.contractDate || "";
+  document.getElementById("lNote").value   = l.note || "";
+
+  document.getElementById("plotsContainer").innerHTML = "";
+  (l.plots && l.plots.length ? l.plots : [{}]).forEach(p => addPlotBlock(p));
+  recalcCommission();
+
+  document.getElementById("btnCancelListing").style.display = "inline-block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function deleteListingRow(id) {
+  if (!confirm("ต้องการลบรายการที่ดินนี้?")) return;
+  try {
+    await Storage.deleteListing(id);
+    showToast("🗑 ลบรายการที่ดินแล้ว");
+  } catch (e) {
+    showToast("❌ ลบไม่สำเร็จ", "error");
+  }
+}
+
 function renderListingsTable() {
   const tbody = document.querySelector("#listingsTable tbody");
   if (!allListingsAdmin.length) {
-    tbody.innerHTML = `<tr><td colspan="4" style="color:#999;">ยังไม่มีประกาศ</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#999;">ยังไม่มีประกาศ</td></tr>`;
     return;
   }
   tbody.innerHTML = allListingsAdmin.map(l => `
     <tr>
       <td>${escHtml(l.title||'')}</td>
       <td>${escHtml(l.type||'')}</td>
-      <td>฿${escHtml(l.price||'—')}</td>
+      <td>฿${Number(l.price||0).toLocaleString("th-TH")}</td>
       <td>${escHtml(l.district||'')} ${escHtml(l.province||'')}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editListing('${l.id}')">✏ แก้ไข</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteListingRow('${l.id}')">🗑 ลบ</button>
+      </td>
     </tr>
   `).join("");
+}
+
+// ─── Google Calendar sync ─────────────────────────────────────────────────────
+function addToGoogleCalendar(id) {
+  const a = allAppointments.find(x => x.id === id);
+  if (!a) return;
+  const datePart = (a.date || todayYMD()).replace(/-/g, "");
+  const timePart = (a.time || "09:00").replace(":", "") + "00";
+  const start = `${datePart}T${timePart}`;
+  // ตั้งเวลาจบ +1 ชม.
+  const startDate = new Date(`${a.date}T${a.time || "09:00"}:00`);
+  const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+  const end = ymd(endDate).replace(/-/g, "") + "T" + String(endDate.getHours()).padStart(2,"0") + String(endDate.getMinutes()).padStart(2,"0") + "00";
+
+  const details = [a.client ? `ลูกค้า: ${a.client}` : "", a.phone ? `เบอร์: ${a.phone}` : "", a.note || ""].filter(Boolean).join("\n");
+  const url = new URL("https://calendar.google.com/calendar/render");
+  url.searchParams.set("action", "TEMPLATE");
+  url.searchParams.set("text", a.title || "นัดหมาย");
+  url.searchParams.set("dates", `${start}/${end}`);
+  url.searchParams.set("details", details);
+  url.searchParams.set("location", a.place || "");
+  window.open(url.toString(), "_blank");
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -521,6 +843,7 @@ function renderAptList(filterDate) {
       <div class="apt-card-btns">
         <button class="apt-mini-btn apt-mini-done" onclick="toggleAptDone('${a.id}')">${a.done ? '↩ ยังไม่เสร็จ' : '✓ เสร็จแล้ว'}</button>
         <button class="apt-mini-btn apt-mini-edit" onclick="editAppointment('${a.id}')">✏ แก้ไข</button>
+        <button class="btn-gcal" onclick="addToGoogleCalendar('${a.id}')">📆 Google Calendar</button>
         <button class="apt-mini-btn apt-mini-del" onclick="deleteAppointment('${a.id}')">🗑 ลบ</button>
       </div>
     </div>
