@@ -25,3 +25,8 @@ const firebaseAuth = firebase.auth();
 const COL_LISTINGS = "listings";
 const COL_CLIENTS  = "clients";
 const COL_APPOINTMENTS = "appointments";
+
+// ─── LINE แจ้งเตือน ───────────────────────────────────────────────────────────
+// วางลิงก์ Web App ของ Google Apps Script (relay) ที่ deploy แล้วตรงนี้
+// ถ้าเว้นว่าง "" = ปิดการแจ้งเตือน LINE (ระบบยังทำงานปกติ)
+const LINE_RELAY_URL = "https://script.google.com/macros/s/AKfycbyA4KdytalFSRiZKHL2Q4l-Dgcn61jF_GbfaO518uFjpYWz5iWUfd1ccEOC9nrbJLnw/exec";
