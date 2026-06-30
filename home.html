@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ฝากขายบ้าน & ที่ดิน</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- ─── Header ─── -->
+<header class="site-header">
+  <div class="inner">
+    <a href="home.html" class="logo">
+      <img src="img/logo.png" alt="ดินอีสาน DIN E SAN" class="logo-img"/>
+      <div class="logo-text">
+        <strong>ดินอีสาน</strong>
+        <span>ฝากขายบ้าน &amp; ที่ดิน</span>
+      </div>
+    </a>
+    <div class="header-actions">
+      <span id="syncStatus"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Page Nav Banner ─── -->
+<div class="page-nav-banner">
+  <div class="page-nav-inner">
+    <span class="page-nav-current">🏠 หน้าหลัก (สินค้าฝากขาย)</span>
+    <a href="#" onclick="event.preventDefault();requireAdminAccess();" class="page-nav-link">
+      📋 ไปหน้าแอดมิน (จัดการลูกค้า) →
+    </a>
+  </div>
+</div>
+
+<!-- ─── Hero ─── -->
+<div class="hero">
+  <h1>รายการบ้านและที่ดินฝากขาย</h1>
+  <p>ค้นหาทรัพย์สินที่ใช่สำหรับคุณ — ติดต่อผ่าน Facebook ได้เลย</p>
+
+  <div class="contact-buttons">
+    <a href="https://www.facebook.com/share/1BUjvYVnpL/?mibextid=wwXIfr" target="_blank" rel="noopener" class="contact-btn contact-fb">
+      <span class="contact-ic">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+      </span>
+      <span class="contact-txt">
+        <small>ทักแชทผ่าน</small>
+        <strong>Facebook</strong>
+      </span>
+    </a>
+
+    <a href="https://page.line.me/607ipbsx" target="_blank" rel="noopener" class="contact-btn contact-line">
+      <span class="contact-ic">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.37 9.16c.39 0 .7.31.7.7 0 .38-.31.69-.7.69h-1.93v1.24h1.93c.39 0 .7.31.7.7 0 .38-.31.69-.7.69h-2.62a.7.7 0 0 1-.69-.69V7.84c0-.38.31-.69.69-.69h2.62c.39 0 .7.31.7.69 0 .39-.31.7-.7.7h-1.93v1.24h1.93zM14.7 12.49c0 .3-.19.56-.47.66a.71.71 0 0 1-.22.03c-.22 0-.42-.1-.55-.28l-2.68-3.65v3.24c0 .38-.31.69-.7.69a.7.7 0 0 1-.69-.69V7.84c0-.3.19-.56.47-.66a.65.65 0 0 1 .22-.04c.21 0 .42.11.55.28l2.69 3.65V7.84c0-.38.3-.69.69-.69.38 0 .7.31.7.69v4.65zM8.2 12.49c0 .38-.31.69-.7.69a.7.7 0 0 1-.69-.69V7.84c0-.38.31-.69.7-.69.38 0 .69.31.69.69v4.65zM12 0C5.37 0 0 4.42 0 9.86c0 4.88 4.26 8.97 10.02 9.74.39.08.92.26 1.05.59.12.3.08.76.04 1.06l-.17 1.02c-.05.3-.24 1.18 1.04.64 1.28-.54 6.9-4.06 9.41-6.95C23.05 14.07 24 12.08 24 9.86 24 4.42 18.63 0 12 0z"/></svg>
+      </span>
+      <span class="contact-txt">
+        <small>แอดไลน์</small>
+        <strong>เพิ่มเพื่อน LINE</strong>
+      </span>
+    </a>
+
+    <a href="tel:0973394865" class="contact-btn contact-phone">
+      <span class="contact-ic">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79a15.53 15.53 0 0 0 6.59 6.59l2.2-2.2a1.02 1.02 0 0 1 1.05-.25c1.16.38 2.41.59 3.69.59.57 0 1.04.47 1.04 1.04V20c0 .57-.47 1.04-1.04 1.04C10.07 21.04 2.96 13.93 2.96 5.13 2.96 4.56 3.43 4.09 4 4.09h3.65c.57 0 1.04.47 1.04 1.04 0 1.28.2 2.53.59 3.69.11.36.02.75-.25 1.05l-2.4 2.92z"/></svg>
+      </span>
+      <span class="contact-txt">
+        <small>โทรหาเราเลย</small>
+        <strong>097-339-4865</strong>
+      </span>
+    </a>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อ, อำเภอ, จังหวัด..." oninput="renderListings()"/>
+  </div>
+</div>
+
+<!-- ─── Filter Tabs ─── -->
+<div class="filter-tabs">
+  <div class="inner">
+    <button class="tab-btn active" data-type="ทั้งหมด" onclick="setFilter(this)">ทั้งหมด</button>
+    <button class="tab-btn" data-type="ที่ดิน"         onclick="setFilter(this)">ที่ดิน</button>
+    <button class="tab-btn" data-type="บ้าน"           onclick="setFilter(this)">บ้าน</button>
+    <button class="tab-btn" data-type="คอนโด"          onclick="setFilter(this)">คอนโด</button>
+    <button class="tab-btn" data-type="อาคารพาณิชย์"  onclick="setFilter(this)">อาคารพาณิชย์</button>
+  </div>
+</div>
+
+<!-- ─── Main ─── -->
+<main class="main">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <span id="resultCount" style="color:#6b7280;font-size:14px;"></span>
+    <div id="adminBar" style="display:none;gap:10px;align-items:center;">
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ เพิ่มรายการ</button>
+      <a href="#" onclick="event.preventDefault();requireAdminAccess();" class="btn btn-primary btn-sm" style="background:#2563eb;">
+        📋 จัดการลูกค้า
+      </a>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">🚪 ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingState" style="text-align:center;padding:60px 0;color:#9ca3af;">
+    <div style="font-size:36px;margin-bottom:12px;">⏳</div>
+    <p>กำลังโหลดข้อมูล...</p>
+  </div>
+
+  <div class="listings-grid" id="listingsGrid" style="display:none;"></div>
+</main>
+
+<!-- ─── Footer ─── -->
+<footer class="site-footer">
+  <p>© 2567 ระบบฝากขายอสังหาริมทรัพย์ •
+    <a href="https://facebook.com" target="_blank">Facebook</a>
+  </p>
+  <p class="footer-credit">📸 iBeePhoto ผู้จัดทำ &nbsp;|&nbsp; โทร. 064-5298287 &nbsp;|&nbsp; Line: daboybee77</p>
+</footer>
+
+<!-- ─── Login Modal ─── -->
+<div class="modal-backdrop" id="loginModal" style="display:none;">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-icon">🔒</div>
+      <div>
+        <h2 style="font-size:20px;font-weight:800;">เข้าสู่ระบบแอดมิน</h2>
+        <p style="font-size:14px;color:#888;margin-top:4px;">กรุณากรอกอีเมลและรหัสผ่าน</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="field field-full">
+        <label>อีเมล</label>
+        <input type="email" id="loginEmail" placeholder="admin@example.com"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="field field-full">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="loginPw" placeholder="รหัสผ่าน"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <p id="loginErr" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;">อีเมลหรือรหัสผ่านไม่ถูกต้อง</p>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnDoLogin" onclick="doLogin()">เข้าสู่ระบบ</button>
+        <button class="btn btn-ghost"   onclick="pendingAdminNav=false;closeModal('loginModal')">ยกเลิก</button>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#bbb;margin-top:12px;">
+        จัดการบัญชีแอดมินได้ที่ Firebase Console → Authentication
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Add/Edit Listing Modal ─── -->
+<div class="modal-backdrop" id="listingModal" style="display:none;">
+  <div class="modal modal-md">
+    <div class="modal-head">
+      <div class="modal-icon">🏷</div>
+      <div><h2 id="listingModalTitle" style="font-size:18px;font-weight:800;">เพิ่มรายการใหม่</h2></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div class="field-row">
+        <div class="field field-full">
+          <label>ชื่อรายการ<span class="req">*</span></label>
+          <input type="text" id="fTitle" placeholder="เช่น ที่ดินเปล่า ติดถนนใหญ่"/>
+        </div>
+        <div class="field field-half">
+          <label>ประเภท</label>
+          <select id="fType">
+            <option>ที่ดิน</option><option>บ้าน</option>
+            <option>คอนโด</option><option>อาคารพาณิชย์</option>
+          </select>
+        </div>
+        <div class="field field-half">
+          <label>ราคา (บาท)</label>
+          <input type="text" id="fPrice" placeholder="2,500,000"/>
+        </div>
+        <div class="field field-half">
+          <label>อำเภอ</label>
+          <input type="text" id="fDistrict" placeholder="อ.เมือง"/>
+        </div>
+        <div class="field field-half">
+          <label>จังหวัด</label>
+          <input type="text" id="fProvince" placeholder="เชียงใหม่"/>
+        </div>
+        <div class="field field-half">
+          <label>เนื้อที่</label>
+          <input type="text" id="fArea" placeholder="2 ไร่ 50 ตร.ว."/>
+        </div>
+        <div class="field field-half">
+          <label>เลขโฉนด</label>
+          <input type="text" id="fDeedNo" placeholder="12345"/>
+        </div>
+        <div class="field field-full">
+          <label>ลิ้งค์ Facebook</label>
+          <input type="url" id="fFbLink" placeholder="https://facebook.com/..."/>
+        </div>
+        <div class="field field-full">
+          <label>URL รูปภาพ</label>
+          <input type="url" id="fImage" placeholder="https://..."/>
+        </div>
+      </div>
+      <p id="saveErr" style="color:#ef4444;font-size:13px;display:none;"></p>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnSaveListing" onclick="saveListing()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeModal('listingModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Firebase SDK ─── -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<!-- ─── App scripts ─── -->
+<script src="js/firebase-config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/db.js"></script>
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let isAdmin      = false; // จะถูกอัปเดตโดย onAuthStateChanged ด้านล่าง
+let activeFilter = "ทั้งหมด";
+let allListings  = [];
+let unsubListings = null;
+let pendingAdminNav = false; // true while waiting for password to navigate to admin.html
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+  updateAdminUI();
+
+  // ติดตามสถานะ login จาก Firebase Auth จริง (แทน sessionStorage เดิม)
+  firebaseAuth.onAuthStateChanged(user => {
+    isAdmin = !!user;
+    sessionStorage.setItem("isAdmin", isAdmin ? "1" : "0");
+    updateAdminUI();
+    renderListings();
+  });
+
+  // Real-time listener — fires every time Firestore data changes
+  unsubListings = Storage.onListings(listings => {
+    allListings = listings;
+    document.getElementById("loadingState").style.display  = "none";
+    document.getElementById("listingsGrid").style.display  = "grid";
+    setSyncStatus("synced");
+    renderListings();
+  });
+
+  // Close modal on backdrop click
+  document.addEventListener("click", e => {
+    ["loginModal","listingModal"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && e.target === el) {
+        if (id === "loginModal") pendingAdminNav = false;
+        closeModal(id);
+      }
+    });
+  });
+});
+
+window.addEventListener("beforeunload", () => {
+  if (unsubListings) unsubListings();
+});
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderListings() {
+  const q = (document.getElementById("searchInput").value || "").toLowerCase();
+  const filtered = allListings.filter(l => {
+    const matchQ = !q
+      || (l.title||"").toLowerCase().includes(q)
+      || (l.district||"").toLowerCase().includes(q)
+      || (l.province||"").toLowerCase().includes(q);
+    const matchT = activeFilter === "ทั้งหมด" || l.type === activeFilter;
+    return matchQ && matchT;
+  });
+
+  document.getElementById("resultCount").innerHTML =
+    `พบ <strong style="color:#111">${filtered.length}</strong> รายการ`
+    + (isAdmin ? ' <span style="color:#1a6b3c;font-weight:600;">(โหมดแอดมิน)</span>' : "");
+
+  const grid = document.getElementById("listingsGrid");
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">🔍</div><p>ไม่พบรายการที่ค้นหา</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(l => `
+    <div class="prop-card">
+      <div class="prop-img-wrap">
+        <img src="${escHtml(l.image||'')}" alt="${escHtml(l.title||'')}"
+          onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80'"
+          style="background:#f3f4f6;"/>
+        <span class="badge badge-type ${l.type==='ที่ดิน'?'land':''}">${escHtml(l.type||'')}</span>
+        <span class="badge badge-status">${escHtml(l.status||'ขาย')}</span>
+      </div>
+      <div class="prop-body">
+        <div class="prop-title">${escHtml(l.title||'')}</div>
+        <div class="prop-loc">📍 ${escHtml(l.district||'')}${l.province?', '+escHtml(l.province):''}</div>
+        <div class="prop-meta">
+          <div class="meta-item"><div class="k">เนื้อที่</div><div class="v">${escHtml(l.area||'—')}</div></div>
+          <div class="meta-item"><div class="k">โฉนดเลขที่</div><div class="v">${escHtml(l.titleDeedNo||'—')}</div></div>
+        </div>
+        <div class="prop-footer">
+          <div>
+            <div class="prop-price-lbl">ราคา</div>
+            <div class="prop-price">฿${escHtml(l.price||'—')}</div>
+          </div>
+          <a href="${escHtml(l.fbLink||'https://facebook.com')}" target="_blank" rel="noopener"
+            class="btn btn-blue btn-sm">📘 ดูเพิ่มเติม</a>
+        </div>
+        ${isAdmin ? `
+        <div class="admin-actions">
+          <button class="btn btn-outline btn-sm" style="flex:1" onclick="openEditModal('${l.id}')">✏ แก้ไข</button>
+          <button class="btn btn-danger btn-sm"  style="flex:1" onclick="deleteListing('${l.id}')">🗑 ลบ</button>
+        </div>` : ''}
+      </div>
+    </div>
+  `).join("");
+}
+
+// ─── Filter ───────────────────────────────────────────────────────────────────
+function setFilter(btn) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeFilter = btn.dataset.type;
+  renderListings();
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+// เรียกจากปุ่ม/ลิ้งค์ที่จะไปหน้าแอดมิน — ต้องใส่อีเมล+รหัสผ่านก่อนทุกครั้ง ไม่ว่าจะเคยล็อกอินมาก่อนหรือไม่
+function requireAdminAccess() {
+  pendingAdminNav = true;
+  document.getElementById("loginEmail").value = "";
+  document.getElementById("loginPw").value = "";
+  document.getElementById("loginErr").style.display = "none";
+  openModal("loginModal");
+}
+
+async function doLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pw    = document.getElementById("loginPw").value;
+  const errEl = document.getElementById("loginErr");
+  const btn   = document.getElementById("btnDoLogin");
+
+  if (!email || !pw) {
+    errEl.textContent = "กรุณากรอกอีเมลและรหัสผ่าน";
+    errEl.style.display = "block";
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = "กำลังเข้าสู่ระบบ...";
+  errEl.style.display = "none";
+
+  try {
+    await firebaseAuth.signInWithEmailAndPassword(email, pw);
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPw").value = "";
+    closeModal("loginModal");
+
+    if (pendingAdminNav) {
+      pendingAdminNav = false;
+      window.location.href = "admin.html";
+      return;
+    }
+    showToast("✅ เข้าสู่ระบบสำเร็จ");
+  } catch (e) {
+    const map = {
+      "auth/user-not-found":     "ไม่พบบัญชีนี้ในระบบ",
+      "auth/wrong-password":     "รหัสผ่านไม่ถูกต้อง",
+      "auth/invalid-email":      "รูปแบบอีเมลไม่ถูกต้อง",
+      "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+      "auth/too-many-requests":  "ลองมากเกินไป กรุณารอสักครู่",
+    };
+    errEl.textContent = map[e.code] || "เกิดข้อผิดพลาด กรุณาลองใหม่";
+    errEl.style.display = "block";
+  }
+
+  btn.disabled = false; btn.textContent = "เข้าสู่ระบบ";
+}
+
+async function logout() {
+  await firebaseAuth.signOut();
+  // onAuthStateChanged จะอัปเดต isAdmin / UI ให้อัตโนมัติ
+}
+
+function updateAdminUI() {
+  const bar = document.getElementById("adminBar");
+  bar.style.display = isAdmin ? "flex" : "none";
+}
+
+// ─── CRUD Listings ───────────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById("listingModalTitle").textContent = "เพิ่มรายการใหม่";
+  ["editId","fTitle","fPrice","fDistrict","fProvince","fArea","fDeedNo","fFbLink","fImage"]
+    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("fType").value = "ที่ดิน";
+  document.getElementById("saveErr").style.display = "none";
+  openModal("listingModal");
+}
+
+function openEditModal(id) {
+  const l = allListings.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById("listingModalTitle").textContent = "แก้ไขรายการ";
+  document.getElementById("editId").value    = l.id;
+  document.getElementById("fTitle").value    = l.title    || "";
+  document.getElementById("fType").value     = l.type     || "ที่ดิน";
+  document.getElementById("fPrice").value    = l.price    || "";
+  document.getElementById("fDistrict").value = l.district || "";
+  document.getElementById("fProvince").value = l.province || "";
+  document.getElementById("fArea").value     = l.area     || "";
+  document.getElementById("fDeedNo").value   = l.titleDeedNo || "";
+  document.getElementById("fFbLink").value   = l.fbLink   || "";
+  document.getElementById("fImage").value    = l.image    || "";
+  document.getElementById("saveErr").style.display = "none";
+  openModal("listingModal");
+}
+
+async function saveListing() {
+  const title = document.getElementById("fTitle").value.trim();
+  if (!title) {
+    document.getElementById("saveErr").textContent = "กรุณากรอกชื่อรายการ";
+    document.getElementById("saveErr").style.display = "block";
+    return;
+  }
+  const btn = document.getElementById("btnSaveListing");
+  btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+  setSyncStatus("saving");
+  const id = document.getElementById("editId").value || uid();
+  const item = {
+    id, title,
+    type:        document.getElementById("fType").value,
+    price:       document.getElementById("fPrice").value,
+    district:    document.getElementById("fDistrict").value,
+    province:    document.getElementById("fProvince").value,
+    area:        document.getElementById("fArea").value,
+    titleDeedNo: document.getElementById("fDeedNo").value,
+    fbLink:      document.getElementById("fFbLink").value,
+    image:       document.getElementById("fImage").value,
+    status:      "ขาย",
+  };
+  try {
+    await Storage.saveListing(item);
+    closeModal("listingModal");
+    showToast(document.getElementById("editId").value ? "✅ อัปเดตรายการแล้ว" : "✅ เพิ่มรายการใหม่แล้ว");
+  } catch(e) {
+    showToast("❌ บันทึกไม่สำเร็จ: " + e.message, "error");
+  }
+  btn.disabled = false; btn.textContent = "💾 บันทึก";
+}
+
+async function deleteListing(id) {
+  if (!confirm("ต้องการลบรายการนี้?")) return;
+  setSyncStatus("saving");
+  try {
+    await Storage.deleteListing(id);
+    showToast("🗑 ลบรายการเรียบร้อย");
+  } catch(e) {
+    showToast("❌ ลบไม่สำเร็จ", "error");
+  }
+}
+
+// ─── Escape HTML ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+                  .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+</script>
+</body>
+</html>
