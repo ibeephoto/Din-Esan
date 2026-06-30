@@ -148,6 +148,58 @@
       </div>
     </div>
 
+    <!-- ─── จัดการรายการที่ดิน ─── -->
+    <div class="card">
+      <h2>🏞️ จัดการรายการที่ดิน (เพิ่ม/แก้ไข)</h2>
+      <input type="hidden" id="listingEditId"/>
+
+      <div class="field-row">
+        <div class="field field-full"><label>ชื่อประกาศ</label><input type="text" id="lTitle" placeholder="เช่น ที่ดินเปล่า ติดถนนใหญ่ อ.เมือง"/></div>
+        <div class="field"><label>ประเภท</label>
+          <select id="lType">
+            <option>ที่ดินเปล่า</option><option>ที่ดินพร้อมสิ่งปลูกสร้าง</option><option>ที่ดินเกษตร</option><option>อื่นๆ</option>
+          </select>
+        </div>
+        <div class="field"><label>สถานะ</label>
+          <select id="lStatus"><option>พร้อมขาย</option><option>จองแล้ว</option><option>ขายแล้ว</option><option>ระงับชั่วคราว</option></select>
+        </div>
+        <div class="field field-full"><label>รายละเอียดเพิ่มเติม</label><textarea id="lDesc" placeholder="รายละเอียดประกาศ..."></textarea></div>
+      </div>
+
+      <div style="margin-top:18px; display:flex; align-items:center; justify-content:space-between;">
+        <h2 style="margin:0;">📜 ข้อมูลแปลง / โฉนด</h2>
+        <button type="button" class="btn-add-plot" onclick="addPlotBlock()">＋ เพิ่มแปลง / คอลัมน์</button>
+      </div>
+      <p style="color:#888; font-size:12.5px; margin:6px 0 12px;">แต่ละแปลงมี: หมายเลขโฉนด, อำเภอ, จังหวัด, เนื้อที่ (ไร่-งาน-ตร.ว.), พิกัด, ราคา และรูปโฉนดหน้า-หลัง — กดปุ่มด้านบนเพื่อเพิ่มแปลง/คอลัมน์ได้ไม่จำกัด</p>
+      <div id="plotsContainer"></div>
+
+      <div style="margin-top:20px;">
+        <h2>💰 ค่านายหน้าการตลาด</h2>
+        <div class="field-row">
+          <div class="field"><label>ราคารวมทุกแปลง (บาท)</label><input type="text" id="lTotalPriceDisplay" readonly style="background:#f3f4f6;"/></div>
+          <div class="field"><label>อัตราค่านายหน้า (%)</label><input type="number" id="lCommissionRate" value="3" step="0.1" oninput="recalcCommission()"/></div>
+          <div class="field"><label>ค่าใช้จ่ายการตลาดเพิ่มเติม (บาท) <span style="font-weight:400;color:#888;">(ถ้าต้องการทำการตลาดเพิ่ม)</span></label>
+            <input type="number" id="lMarketingExtra" value="0" oninput="recalcCommission()"/>
+          </div>
+          <div class="field"><label>วันที่ชำระ (วันที่เซ็นสัญญาแต่งตั้งนายหน้า)</label><input type="date" id="lContractDate"/></div>
+        </div>
+        <div class="commission-box">
+          <div class="commission-row"><span>ราคารวมทุกแปลง</span><span id="ccTotal">฿0</span></div>
+          <div class="commission-row"><span>หักค่านายหน้า (<span id="ccRateLabel">3</span>%)</span><span id="ccCommission">฿0</span></div>
+          <div class="commission-row"><span>หักค่าการตลาดเพิ่มเติม</span><span id="ccExtra">฿0</span></div>
+          <div class="commission-row"><span>คงเหลือสุทธิ</span><span id="ccNet">฿0</span></div>
+        </div>
+      </div>
+
+      <div class="field field-full" style="margin-top:18px;"><label>📝 หมายเหตุ</label><textarea id="lNote" placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับรายการนี้..."></textarea></div>
+
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" id="btnSaveListing" onclick="saveListingForm()">💾 บันทึกรายการที่ดิน</button>
+        <button class="btn btn-ghost btn-sm" id="btnCancelListing" style="display:none;" onclick="resetListingForm()">ยกเลิกแก้ไข</button>
+      </div>
+      <p id="listingMsg" style="margin-top:10px; font-size:13px;"></p>
+    </div>
+
     <!-- ─── ปฏิทินนัดหมาย ─── -->
     <div class="card">
       <div class="cal-head">
@@ -203,58 +255,6 @@
         <button class="btn-export btn-all" onclick="exportAllXLSX()">⬇ Excel รวม (2 sheet)</button>
       </div>
       <p id="exportMsg" style="margin-top:10px; font-size:13px; color:#666;"></p>
-    </div>
-
-    <!-- ─── จัดการรายการที่ดิน ─── -->
-    <div class="card">
-      <h2>🏞️ จัดการรายการที่ดิน (เพิ่ม/แก้ไข)</h2>
-      <input type="hidden" id="listingEditId"/>
-
-      <div class="field-row">
-        <div class="field field-full"><label>ชื่อประกาศ</label><input type="text" id="lTitle" placeholder="เช่น ที่ดินเปล่า ติดถนนใหญ่ อ.เมือง"/></div>
-        <div class="field"><label>ประเภท</label>
-          <select id="lType">
-            <option>ที่ดินเปล่า</option><option>ที่ดินพร้อมสิ่งปลูกสร้าง</option><option>ที่ดินเกษตร</option><option>อื่นๆ</option>
-          </select>
-        </div>
-        <div class="field"><label>สถานะ</label>
-          <select id="lStatus"><option>พร้อมขาย</option><option>จองแล้ว</option><option>ขายแล้ว</option><option>ระงับชั่วคราว</option></select>
-        </div>
-        <div class="field field-full"><label>รายละเอียดเพิ่มเติม</label><textarea id="lDesc" placeholder="รายละเอียดประกาศ..."></textarea></div>
-      </div>
-
-      <div style="margin-top:18px; display:flex; align-items:center; justify-content:space-between;">
-        <h2 style="margin:0;">📜 ข้อมูลแปลง / โฉนด</h2>
-        <button type="button" class="btn-add-plot" onclick="addPlotBlock()">＋ เพิ่มแปลง / คอลัมน์</button>
-      </div>
-      <p style="color:#888; font-size:12.5px; margin:6px 0 12px;">แต่ละแปลงมี: หมายเลขโฉนด, อำเภอ, จังหวัด, เนื้อที่ (ไร่-งาน-ตร.ว.), พิกัด, ราคา และรูปโฉนดหน้า-หลัง — กดปุ่มด้านบนเพื่อเพิ่มแปลง/คอลัมน์ได้ไม่จำกัด</p>
-      <div id="plotsContainer"></div>
-
-      <div style="margin-top:20px;">
-        <h2>💰 ค่านายหน้าการตลาด</h2>
-        <div class="field-row">
-          <div class="field"><label>ราคารวมทุกแปลง (บาท)</label><input type="text" id="lTotalPriceDisplay" readonly style="background:#f3f4f6;"/></div>
-          <div class="field"><label>อัตราค่านายหน้า (%)</label><input type="number" id="lCommissionRate" value="3" step="0.1" oninput="recalcCommission()"/></div>
-          <div class="field"><label>ค่าใช้จ่ายการตลาดเพิ่มเติม (บาท) <span style="font-weight:400;color:#888;">(ถ้าต้องการทำการตลาดเพิ่ม)</span></label>
-            <input type="number" id="lMarketingExtra" value="0" oninput="recalcCommission()"/>
-          </div>
-          <div class="field"><label>วันที่ชำระ (วันที่เซ็นสัญญาแต่งตั้งนายหน้า)</label><input type="date" id="lContractDate"/></div>
-        </div>
-        <div class="commission-box">
-          <div class="commission-row"><span>ราคารวมทุกแปลง</span><span id="ccTotal">฿0</span></div>
-          <div class="commission-row"><span>หักค่านายหน้า (<span id="ccRateLabel">3</span>%)</span><span id="ccCommission">฿0</span></div>
-          <div class="commission-row"><span>หักค่าการตลาดเพิ่มเติม</span><span id="ccExtra">฿0</span></div>
-          <div class="commission-row"><span>คงเหลือสุทธิ</span><span id="ccNet">฿0</span></div>
-        </div>
-      </div>
-
-      <div class="field field-full" style="margin-top:18px;"><label>📝 หมายเหตุ</label><textarea id="lNote" placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับรายการนี้..."></textarea></div>
-
-      <div style="margin-top:14px; display:flex; gap:10px;">
-        <button class="btn btn-primary btn-sm" id="btnSaveListing" onclick="saveListingForm()">💾 บันทึกรายการที่ดิน</button>
-        <button class="btn btn-ghost btn-sm" id="btnCancelListing" style="display:none;" onclick="resetListingForm()">ยกเลิกแก้ไข</button>
-      </div>
-      <p id="listingMsg" style="margin-top:10px; font-size:13px;"></p>
     </div>
 
     <!-- ─── รายการประกาศทั้งหมด ─── -->
@@ -323,6 +323,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <!-- ─── App scripts (ใช้ของเดิมร่วมกับหน้าหลัก) ─── -->
 <script src="js/firebase-config.js"></script>
@@ -527,6 +528,7 @@ function plotBlockHtml(p = {}) {
           <label>📷 ถ่ายภาพ<input type="file" accept="image/*" capture="environment" class="p-imgfront-cam" onchange="handlePlotPhoto(this,${n},'front')"/></label>
         </div>
         <img class="photo-preview p-imgfront-preview" src="${p.imgFront||''}" style="${p.imgFront?'display:block;':''}"/>
+        <span class="photo-status p-imgfront-status" style="font-size:11.5px;color:#888;"></span>
         <input type="hidden" class="p-imgfront" value="${p.imgFront||''}"/>
       </div>
       <div class="photo-field">
@@ -536,6 +538,7 @@ function plotBlockHtml(p = {}) {
           <label>📷 ถ่ายภาพ<input type="file" accept="image/*" capture="environment" class="p-imgback-cam" onchange="handlePlotPhoto(this,${n},'back')"/></label>
         </div>
         <img class="photo-preview p-imgback-preview" src="${p.imgBack||''}" style="${p.imgBack?'display:block;':''}"/>
+        <span class="photo-status p-imgback-status" style="font-size:11.5px;color:#888;"></span>
         <input type="hidden" class="p-imgback" value="${p.imgBack||''}"/>
       </div>
     </div>
@@ -552,18 +555,34 @@ function removePlotBlock(n) {
   recalcCommission();
 }
 
-function handlePlotPhoto(input, n, side) {
+async function handlePlotPhoto(input, n, side) {
   const file = input.files && input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const block = document.getElementById("plot-" + n);
-    block.querySelector(side === "front" ? ".p-imgfront" : ".p-imgback").value = e.target.result;
-    const preview = block.querySelector(side === "front" ? ".p-imgfront-preview" : ".p-imgback-preview");
-    preview.src = e.target.result;
-    preview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+  const block = document.getElementById("plot-" + n);
+  const statusEl = block.querySelector(side === "front" ? ".p-imgfront-status" : ".p-imgback-status");
+  const preview  = block.querySelector(side === "front" ? ".p-imgfront-preview" : ".p-imgback-preview");
+  const hiddenEl = block.querySelector(side === "front" ? ".p-imgfront" : ".p-imgback");
+
+  // แสดงตัวอย่างทันทีระหว่างอัปโหลด (local preview ชั่วคราว)
+  const localPreviewUrl = URL.createObjectURL(file);
+  preview.src = localPreviewUrl;
+  preview.style.display = "block";
+  statusEl.textContent = "⏳ กำลังอัปโหลด...";
+  input.disabled = true;
+
+  try {
+    const path = `listings/plot${n}_${side}_${Date.now()}_${file.name}`;
+    const url = await Storage.uploadImage(file, path);
+    hiddenEl.value = url;
+    preview.src = url;
+    statusEl.textContent = "✅ อัปโหลดสำเร็จ";
+    setTimeout(() => { statusEl.textContent = ""; }, 2500);
+  } catch (e) {
+    statusEl.textContent = "❌ อัปโหลดไม่สำเร็จ: " + e.message;
+  } finally {
+    input.disabled = false;
+    URL.revokeObjectURL(localPreviewUrl);
+  }
 }
 
 function getPlotsFromForm() {

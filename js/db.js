@@ -6,6 +6,7 @@
 // โหลดผ่าน CDN ใน HTML แล้ว ตัวนี้เป็น wrapper เท่านั้น
 
 let _db = null;
+let _storage = null;
 
 function getDB() {
   if (_db) return _db;
@@ -14,6 +15,15 @@ function getDB() {
   }
   _db = firebase.firestore();
   return _db;
+}
+
+function getStorageInstance() {
+  if (_storage) return _storage;
+  if (!firebase || !firebase.apps.length) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+  }
+  _storage = firebase.storage();
+  return _storage;
 }
 
 // ─── LISTINGS ─────────────────────────────────────────────────────────────────
@@ -49,6 +59,18 @@ const DB = {
 
   async deleteListing(id) {
     await getDB().collection(COL_LISTINGS).doc(id).delete();
+  },
+
+  // ─── รูปภาพ (Firebase Storage) ────────────────────────────────────────────
+  async uploadImage(file, path) {
+    const ref = getStorageInstance().ref(path);
+    await ref.put(file);
+    return await ref.getDownloadURL();
+  },
+
+  async deleteImage(path) {
+    try { await getStorageInstance().ref(path).delete(); }
+    catch (e) { console.warn("ลบรูปไม่สำเร็จ (อาจไม่มีอยู่จริง):", e.message); }
   },
 
   async seedListings() {
@@ -171,6 +193,25 @@ const Storage = {
       return;
     }
     await DB.deleteListing(id);
+  },
+
+  // ─── รูปภาพ (อัปโหลดไป Firebase Storage, fallback เป็น base64 ถ้ายังไม่ได้ตั้งค่า Firebase) ─
+  async uploadImage(file, path) {
+    if (!isFirebaseConfigured()) {
+      // โหมดออฟไลน์ / ยังไม่ตั้งค่า Firebase: เก็บเป็น base64 ในเครื่องแทน (ไม่แนะนำสำหรับ production)
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    return await DB.uploadImage(file, path);
+  },
+
+  async deleteImage(path) {
+    if (!isFirebaseConfigured() || !path || path.startsWith("data:")) return;
+    await DB.deleteImage(path);
   },
 
   onClients(cb) {
