@@ -76,22 +76,21 @@ function toGCalURL(date, time, note) {
 
 // ─── Sample listings ──────────────────────────────────────────────────────────
 const SAMPLE_LISTINGS = [
-  {
-    id: "sample1",
-    title: "ที่ดินเปล่า ติดถนนใหญ่ อ.เมือง",
-    type: "ที่ดิน", price: "2,500,000",
-    area: "2 ไร่ 50 ตร.ว.", district: "อ.เมือง", province: "เชียงใหม่",
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80",
-    fbLink: "https://facebook.com", titleDeedNo: "12345", status: "ขาย"
-  },
-  {
-    id: "sample2",
-    title: "บ้านเดี่ยว 2 ชั้น หมู่บ้านใหม่",
-    type: "บ้าน", price: "3,800,000",
-    area: "54 ตร.ว.", district: "อ.สันทราย", province: "เชียงใหม่",
-    image: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80",
-    fbLink: "https://facebook.com", titleDeedNo: "67890", status: "ขาย"
-  },
+  // ─── LINE Notify (ผ่าน Google Apps Script relay) ──────────────────────────────
+async function notifyLine(message) {
+  if (!LINE_RELAY_URL) return; // ไม่ได้ตั้งค่าไว้ = ปิดการแจ้งเตือน
+
+  try {
+    await fetch(LINE_RELAY_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ message })
+    });
+  } catch (err) {
+    console.error("แจ้งเตือน LINE ล้มเหลว:", err);
+  }
+}
   {
     id: "sample3",
     title: "ที่ดินวิวภูเขา ใกล้แหล่งท่องเที่ยว",
@@ -100,4 +99,21 @@ const SAMPLE_LISTINGS = [
     image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
     fbLink: "https://facebook.com", titleDeedNo: "11111", status: "ขาย"
   },
+];
+
+// ─── LINE Notify (ผ่าน Google Apps Script relay) ──────────────────────────────
+async function notifyLine(message) {
+  if (!LINE_RELAY_URL) return; // ไม่ได้ตั้งค่าไว้ = ปิดการแจ้งเตือน
+
+  try {
+    await fetch(LINE_RELAY_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ message })
+    });
+  } catch (err) {
+    console.error("แจ้งเตือน LINE ล้มเหลว:", err);
+  }
+}
 ];
