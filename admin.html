@@ -496,7 +496,10 @@ async function saveClient() {
     channel:  document.getElementById("cChannel").value,
   };
   await Storage.saveClient(item);
-}
+    if (typeof notifyLine === "function") {
+      notifyLine(`👤 มีลูกค้าใหม่/อัปเดต: ${item.name}\nเบอร์: ${item.phone || "-"}\nสนใจ: ${item.interest || "-"}`);
+    }
+  }
 
 async function deleteClientRow(id) {
   if (!confirm("ต้องการลบข้อมูลลูกค้านี้?")) return;
@@ -737,7 +740,10 @@ async function saveListingForm() {
   };
 
   await Storage.saveListing(item);
-}
+    if (typeof notifyLine === "function") {
+      notifyLine(`🏠 มีประกาศใหม่/อัปเดต: ${item.title}\nราคา: ${item.price.toLocaleString("th-TH")} บาท\nสถานะ: ${item.status}`);
+    }
+  }
 
 function editListing(id) {
   const l = allListingsAdmin.find(x => x.id === id);
