@@ -13,6 +13,9 @@ const firebaseConfig = {
   measurementId: "G-B5P80KD0T0"
 };
 
+// ─── Admin password (เปลี่ยนได้เลย) ──────────────────────────────────────────
+const ADMIN_PASSWORD = "admin1234";
+
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
