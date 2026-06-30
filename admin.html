@@ -132,7 +132,6 @@
             <option>Facebook</option><option>Line</option><option>โทรศัพท์</option><option>อื่นๆ</option>
           </select>
         </div>
-        <div class="field field-full"><label>บันทึกเพิ่มเติม</label><textarea id="cNote" placeholder="รายละเอียดการติดต่อ..."></textarea></div>
       </div>
       <div style="margin-top:14px; display:flex; gap:10px;">
         <button class="btn btn-primary btn-sm" id="btnSaveClient" onclick="saveClient()">💾 บันทึกลูกค้า</button>
@@ -441,13 +440,12 @@ function editClient(c) {
   document.getElementById("cPhone").value    = c.phone    || "";
   document.getElementById("cInterest").value = c.interest || "";
   document.getElementById("cChannel").value  = c.channel  || "Facebook";
-  document.getElementById("cNote").value     = c.note     || "";
   document.getElementById("btnCancelClient").style.display = "inline-block";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function resetClientForm() {
-  ["clientEditId","cName","cPhone","cInterest","cNote"].forEach(id => document.getElementById(id).value = "");
+  ["clientEditId","cName","cPhone","cInterest"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("cChannel").value = "Facebook";
   document.getElementById("btnCancelClient").style.display = "none";
   document.getElementById("clientMsg").textContent = "";
@@ -467,7 +465,6 @@ async function saveClient() {
     phone:    document.getElementById("cPhone").value.trim(),
     interest: document.getElementById("cInterest").value.trim(),
     channel:  document.getElementById("cChannel").value,
-    note:     document.getElementById("cNote").value.trim(),
   };
   const btn = document.getElementById("btnSaveClient");
   btn.disabled = true; btn.textContent = "กำลังบันทึก...";
